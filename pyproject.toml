@@ -1,0 +1,61 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/c_elegans_utils"]
+
+[project]
+name = "c-elegans-utils"
+description = "Utilities library for tracking C elegans with the motile tracker"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+]
+keywords = []
+license = { text = "BSD 3-Clause License" }
+authors = [
+    { email = "malinmayorc@janelia.hhmi.org", name = "Funke Lab" },
+]
+version="v0.0.1_alpha"
+
+# TODO: Get back dynamic versions
+# dynamic = ["version"]
+
+[tool.pixi.project]
+channels = ["conda-forge", "funkelab", "gurobi"]
+platforms = ["osx-arm64"]
+
+
+[tool.pixi.dependencies]
+ilpy = ">=0.4.1"
+
+[tool.pixi.pypi-dependencies]
+c-elegans-utils = { path = ".", editable = true }
+motile = ">=0.3.0"
+
+[project.urls]
+homepage = "https://github.com/funkelab/darts_experiments"
+repository = "https://github.com/funkelab/darts_experiments"
+
+# https://github.com/charliermarsh/ruff
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-select = [
+    "E",    # style errors
+    "F",    # flakes
+    "I001", # isort
+    "U",    # pyupgrade
+    "S",    # bandit
+    "C",    # flake8-comprehensions
+    "B",    # flake8-bugbear
+    "A001", # flake8-builtins
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+  "S311",   # random numbers for cryptography
+  "S101",   # asserts not allowed
+]
