@@ -189,6 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("--seam-cell-raw", action="store_true")
     parser.add_argument("--seg", action="store_true")
     parser.add_argument("--manual", action="store_true")
+    parser.add_argument("--seam-cell-tracks", action="store_true")
     args = parser.parse_args()
     config = toml.load(args.config)
     if args.time_range is not None:
@@ -208,6 +209,10 @@ if __name__ == "__main__":
     _test_exists(manual_base_path)
     manual_end_path = input_config["manual_tracks_end"]
 
+    seam_cell_base_path = data_base_path / input_config["seam_cell_tracks_base"]
+    _test_exists(seam_cell_base_path)
+    seam_cell_end_path = input_config["seam_cell_tracks_end"]
+
     # create output location
     output_config = config["output"]
     output_base_path =  Path(output_config["base_path"])
@@ -218,6 +223,8 @@ if __name__ == "__main__":
     seg_store =  output_zarr / output_config["seg_group"]
     manual_output_path : Path = output_zarr / output_config["manual_tracks_dir"]  # put it inside the zarr?
     manual_output_path.mkdir(exist_ok=True, parents=False)
+    seam_cell_output_path : Path = output_zarr / output_config["seam_cell_tracks_dir"]  # put it inside the zarr?
+    seam_cell_output_path.mkdir(exist_ok=True, parents=False)
 
     # get conversion parameters
     conv_config = config["conversion"]
@@ -240,3 +247,7 @@ if __name__ == "__main__":
             _, pad_widths = _get_store_padding(raw_store)
             offsets = [pad_width[0] for pad_width in pad_widths]
             convert_tracks(manual_base_path, manual_end_path, manual_output_path, time_range=time_range, offsets=offsets)
+        if args.seam_cell_tracks:
+            _, pad_widths = _get_store_padding(raw_store)
+            offsets = [pad_width[0] for pad_width in pad_widths]
+            convert_tracks(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)

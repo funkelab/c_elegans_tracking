@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--seam-cell-raw", action="store_true")
     parser.add_argument("--seg", action="store_true")
     parser.add_argument("--manual", action="store_true")
+    parser.add_argument("--seam-cell-tracks", action="store_true")
     args = parser.parse_args()
     config = toml.load(args.config)["data"]
     # if args.time_range is not None:
@@ -54,6 +55,16 @@ if __name__ == "__main__":
         motile_widget = MainApp(viewer)
         tracks_viewer = TracksViewer.get_instance(viewer)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
+    
+    if args.seam_cell_tracks:
+        seam_cell_tracks_dir = zarr_file / config["seam_cell_tracks_dir"]
+        _test_exists(seam_cell_tracks_dir)
+        tracks = Tracks.load(seam_cell_tracks_dir)
+        solution_tracks = SolutionTracks.from_tracks(tracks)
+
+        motile_widget = MainApp(viewer)
+        tracks_viewer = TracksViewer.get_instance(viewer)
+        tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
 
 
     # raw = zarr.open(zarr_file, path="RegB")

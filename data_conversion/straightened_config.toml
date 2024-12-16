@@ -7,13 +7,13 @@ seam_cell_path = "RegA/Straightened"
 seg_path = "RegC/Straightened"
 manual_tracks_base = "Annotations/Straightened/Hand_Annotated"
 manual_tracks_end = "straightened_annotations/straightened_annotations.csv"
+seam_cell_tracks_base = "Seam_Cells/Straightened"
+seam_cell_tracks_end = "straightened_seamcells/straightened_seamcells.csv"
 
 # Conversion parameters
 [conversion]
 straightened = true
 alignment = "center"
-raw = true
-seam_cell_raw = true
 time_range = [11, 85]
 
 
@@ -25,3 +25,4 @@ raw_group = "RegB"
 seam_cell_group = "RegA"
 seg_group = "CellPose"
 manual_tracks_dir = "manual_tracks"
+seam_cell_tracks_dir = "seam_cell_tracks"
