@@ -8,7 +8,7 @@ packages = ["src/c_elegans_utils"]
 name = "c-elegans-utils"
 description = "Utilities library for tracking C elegans with the motile tracker"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 classifiers = [
   "Programming Language :: Python :: 3",
 ]
@@ -18,6 +18,11 @@ authors = [
     { email = "malinmayorc@janelia.hhmi.org", name = "Funke Lab" },
 ]
 version="v0.0.1_alpha"
+dependencies = [
+  "funlib-geometry>=0.3.0,<0.4",
+  "motile>=0.3.0,<0.4",
+  "funlib-persistence>=0.5.3,<0.6",
+]
 
 # TODO: Get back dynamic versions
 # dynamic = ["version"]
@@ -26,17 +31,24 @@ version="v0.0.1_alpha"
 channels = ["conda-forge", "funkelab", "gurobi"]
 platforms = ["osx-arm64"]
 
-
 [tool.pixi.dependencies]
-ilpy = ">=0.4.1"
+ilpy = ">=0.4.1,<0.5"
+tifffile = ">=2024.12.12,<2025"
+pandas = ">=2.2.3,<3"
+numpy = ">=2.2.0,<3"
+tqdm = ">=4.67.1,<5"
+networkx = ">=3.4.2,<4"
+zarr = ">=2.18.4,<3"
+pydantic = ">=2.10.3,<3"
+napari = ">=0.5.0,<0.6"
+pyqt = ">=5.15.9,<6"
+ipykernel = ">=6.29.5,<7"
+pip = ">=24.3.1,<25"
 
 [tool.pixi.pypi-dependencies]
 c-elegans-utils = { path = ".", editable = true }
-motile = ">=0.3.0"
+motile_plugin = { path = "../motile_tracker", editable = true }
 
-[project.urls]
-homepage = "https://github.com/funkelab/darts_experiments"
-repository = "https://github.com/funkelab/darts_experiments"
 
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
