@@ -5,6 +5,8 @@ base_path = "/Volumes/funke/data/ForCarolineFromRyan"
 raw_path = "RegB/Straightened"
 seam_cell_path = "RegA/Straightened"
 seg_path = "RegC/Straightened"
+manual_tracks_base = "Annotations/Straightened/Hand_Annotated"
+manual_tracks_end = "straightened_annotations/straightened_annotations.csv"
 
 # Conversion parameters
 [conversion]
@@ -21,3 +23,5 @@ base_path = "/Volumes/funke/data/lightsheet/shroff_c_elegans/post_twitching_neur
 zarr =  "straightened.zarr"
 raw_group = "RegB"
 seam_cell_group = "RegA"
+seg_group = "CellPose"
+manual_tracks_dir = "manual_tracks"
