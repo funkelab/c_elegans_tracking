@@ -1,0 +1,23 @@
+
+# Input data location
+[input]
+base_path = "/Volumes/funke/data/ForCarolineFromRyan"
+raw_path = "RegB/Straightened"
+seam_cell_path = "RegA/Straightened"
+seg_path = "RegC/Straightened"
+
+# Conversion parameters
+[conversion]
+straightened = true
+alignment = "center"
+raw = true
+seam_cell_raw = true
+time_range = [11, 85]
+
+
+# Output data location
+[output]
+base_path = "/Volumes/funke/data/lightsheet/shroff_c_elegans/post_twitching_neurons"
+zarr =  "straightened.zarr"
+raw_group = "RegB"
+seam_cell_group = "RegA"

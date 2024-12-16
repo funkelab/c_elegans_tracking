@@ -1,0 +1,8 @@
+
+# Data location
+[data]
+base_path = "/Volumes/funke/data/lightsheet/shroff_c_elegans/post_twitching_neurons"
+zarr =  "straightened.zarr"
+raw_group = "RegB"
+seam_cell_group = "RegA"
+time_range = [11, 85]

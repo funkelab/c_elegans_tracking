@@ -524,7 +524,7 @@ packages:
 - pypi: .
   name: c-elegans-utils
   version: 0.0.1a0
-  sha256: b56d5b4f9a613972ff744f2bd1cacf3cfea72ae13b2a6847ba1c4def9d47e22c
+  sha256: e71ec12b380840577323b96947c15fdb4ad583ad8d0a8cea70893a93389ddabf
   requires_dist:
   - funlib-geometry>=0.3.0,<0.4
   - motile>=0.3.0,<0.4
