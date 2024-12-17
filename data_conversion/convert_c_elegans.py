@@ -10,6 +10,7 @@ import toml
 import networkx as nx
 import pandas as pd
 from motile_plugin.data_model import Tracks
+import csv
 
 
 DIR_TEMPLATE = "Decon_reg_{time}"
@@ -136,6 +137,57 @@ def convert_raw_straightened(
         arr = np.expand_dims(arr, axis=0)
         target_array[roi] = arr
 
+def convert_raw_twisted(
+    raw_path: Path,
+    output_store: Path,
+    time_range=(11, 85),
+):
+    # get the shapes of one frame
+
+    file = raw_path / TWISTED_FILE_TEMPLATE.format(time=11)
+    assert file.is_file(), f"File {file} does not exist"
+    tif = tifffile.TiffFile(file)
+    num_z_slices = len(tif.pages)
+    yx_shape = tif.pages[0].shape
+    output_frame_shape = (num_z_slices, *yx_shape)
+    # pad_widths = None
+
+    # prepare zarr
+    num_times = time_range[1] - time_range[0]
+    ds_shape = (num_times, *output_frame_shape)
+    offset = (time_range[0], 0, 0, 0)
+    voxel_size = (1, 1, 1, 1)
+    axis_names = ("t", "z", "y", "x")   
+    dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
+    # and the max value is 63430. So we will save as uint16 to be efficient
+    print(ds_shape, offset, voxel_size, axis_names)
+    target_array = fp.prepare_ds(
+        store=output_store,
+        shape=ds_shape,
+        offset=offset,
+        voxel_size=voxel_size,
+        axis_names=axis_names,
+        dtype=dtype,
+        mode="w",
+    )
+    
+    # add pad width list for retrieval later (to be replaced with custom_metadata)
+    # zarr_array = zarr.open(output_store, mode='a')
+    # zarr_array.attrs["pad_widths"] = pad_widths
+
+    # load the actual data, pad, and write to zarr
+    for i in tqdm(range(*time_range), desc="Loading and saving each twisted time point"):
+        file = raw_path / TWISTED_FILE_TEMPLATE.format(time=i)
+        assert file.is_file(), f"File {file} does not exist"
+        arr = tifffile.imread(file)
+        # time_idx = i - time_range[0]
+        # padding = pad_widths[time_idx]
+
+        # do it properly with funlib persistence
+        roi = Roi(offset=(i, 0, 0, 0), shape=(1, *arr.shape))
+        arr = np.expand_dims(arr, axis=0)
+        target_array[roi] = arr
+
 
 def _test_exists(path):
     assert path.exists(), f"{path} does not exist"
@@ -145,7 +197,7 @@ def convert_tracks(
     path_after_time: str,
     output_path: Path,
     time_range: tuple[int, int],
-    offsets: list[Coordinate]
+    offsets: list[Coordinate] | None,
 ):
     graph = nx.DiGraph()
     node_id = 0
@@ -180,6 +232,39 @@ def convert_tracks(
     tracks = Tracks(graph, ndim=4)
     tracks.save(output_path)
 
+def convert_points(
+    annotations_path: Path,
+    path_after_time: str,
+    output_file: Path,
+    time_range: tuple[int, int],
+    offsets: list[Coordinate]
+):  
+    print(output_file)
+    with open(output_file, 'w') as f:
+        header = ["id", "t", "z", "y", "x", "name"]
+        writer = csv.DictWriter(f, fieldnames=header, extrasaction="ignore")
+        writer.writeheader()
+
+        node_id = 0
+        for i in tqdm(range(*time_range)):
+            print(i)
+            offset = offsets[i - time_range[0]] if offsets is not None else [0, 0, 0]
+            file = annotations_path / DIR_TEMPLATE.format(time=i) / path_after_time
+            _test_exists(file)
+        
+            df = pd.read_csv(file)
+            df["t"] = i - time_range[0]
+            z_offset = offset[0]
+            y_offset = offset[1]
+            x_offset = offset[2]
+            df["z"] = df["z_voxels"] + z_offset
+            df["y"] = df["y_voxels"] + y_offset
+            df["x"] = df["x_voxels"] + x_offset
+            for _, row in df.iterrows():
+                row_dict = row.to_dict()
+                row_dict["id"] = node_id
+                writer.writerow(row_dict)
+                node_id += 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -190,6 +275,7 @@ if __name__ == "__main__":
     parser.add_argument("--seg", action="store_true")
     parser.add_argument("--manual", action="store_true")
     parser.add_argument("--seam-cell-tracks", action="store_true")
+    parser.add_argument("--seg-centers", action="store_true")
     args = parser.parse_args()
     config = toml.load(args.config)
     if args.time_range is not None:
@@ -201,17 +287,6 @@ if __name__ == "__main__":
     _test_exists(data_base_path)
     raw_path = data_base_path / input_config["raw_path"]
     _test_exists(raw_path)
-    seam_cell_raw_path = data_base_path / input_config["seam_cell_path"]
-    _test_exists(seam_cell_raw_path)
-    seg_path = data_base_path / input_config["seg_path"]
-    _test_exists(seg_path)
-    manual_base_path = data_base_path / input_config["manual_tracks_base"]
-    _test_exists(manual_base_path)
-    manual_end_path = input_config["manual_tracks_end"]
-
-    seam_cell_base_path = data_base_path / input_config["seam_cell_tracks_base"]
-    _test_exists(seam_cell_base_path)
-    seam_cell_end_path = input_config["seam_cell_tracks_end"]
 
     # create output location
     output_config = config["output"]
@@ -219,12 +294,6 @@ if __name__ == "__main__":
     output_base_path.mkdir(exist_ok=True, parents=True)
     output_zarr = output_base_path / output_config["zarr"]
     raw_store =  output_zarr / output_config["raw_group"]
-    seam_cell_raw_store =  output_zarr / output_config["seam_cell_group"]
-    seg_store =  output_zarr / output_config["seg_group"]
-    manual_output_path : Path = output_zarr / output_config["manual_tracks_dir"]  # put it inside the zarr?
-    manual_output_path.mkdir(exist_ok=True, parents=False)
-    seam_cell_output_path : Path = output_zarr / output_config["seam_cell_tracks_dir"]  # put it inside the zarr?
-    seam_cell_output_path.mkdir(exist_ok=True, parents=False)
 
     # get conversion parameters
     conv_config = config["conversion"]
@@ -236,18 +305,56 @@ if __name__ == "__main__":
     time_range = conv_config["time_range"]
 
     # run conversion
-    if straightened:
-        if args.raw:
+    if args.raw:
+        if straightened:
             convert_raw_straightened(raw_path, raw_store, time_range=time_range, alignment=alignment)
-        if args.seam_cell_raw:
+        else:
+            convert_raw_twisted(raw_path, raw_store, time_range=time_range)
+    if args.seam_cell_raw:
+        seam_cell_raw_path = data_base_path / input_config["seam_cell_path"]
+        _test_exists(seam_cell_raw_path)
+        seam_cell_raw_store =  output_zarr / output_config["seam_cell_group"]
+        if straightened:
             convert_raw_straightened(seam_cell_raw_path, seam_cell_raw_store, time_range=time_range, alignment="match_store", store_to_match=raw_store)
-        if args.seg:
+        else:
+            convert_raw_twisted(seam_cell_raw_path, seam_cell_raw_store, time_range=time_range)
+    if args.seg:
+        seg_path = data_base_path / input_config["seg_path"]
+        _test_exists(seg_path)
+        seg_store =  output_zarr / output_config["seg_group"]
+        if straightened:
             convert_raw_straightened(seg_path, seg_store, time_range=time_range, alignment="match_store", store_to_match=raw_store)
-        if args.manual:
+        else:
+            convert_raw_twisted(seg_path, seg_store, time_range=time_range)
+    if args.manual:
+        manual_base_path = data_base_path / input_config["manual_tracks_base"]
+        _test_exists(manual_base_path)
+        manual_end_path = input_config["manual_tracks_end"]
+        manual_output_path : Path = output_zarr / output_config["manual_tracks_dir"]  # put it inside the zarr
+        manual_output_path.mkdir(exist_ok=True, parents=False)
+        _, pad_widths = _get_store_padding(raw_store)
+        offsets = [pad_width[0] for pad_width in pad_widths]
+        convert_tracks(manual_base_path, manual_end_path, manual_output_path, time_range=time_range, offsets=offsets)
+    if args.seam_cell_tracks:
+        seam_cell_base_path = data_base_path / input_config["seam_cell_tracks_base"]
+        _test_exists(seam_cell_base_path)
+        seam_cell_end_path = input_config["seam_cell_tracks_end"]
+        seam_cell_output_path : Path = output_zarr / output_config["seam_cell_tracks_dir"]  # put it inside the zarr
+        seam_cell_output_path.mkdir(exist_ok=True, parents=False)
+        if straightened:
             _, pad_widths = _get_store_padding(raw_store)
             offsets = [pad_width[0] for pad_width in pad_widths]
-            convert_tracks(manual_base_path, manual_end_path, manual_output_path, time_range=time_range, offsets=offsets)
-        if args.seam_cell_tracks:
+        else:
+            offsets = None
+        convert_tracks(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
+    if args.seg_centers:
+        seg_centers_base_path = data_base_path / input_config["seg_centers_base"]
+        _test_exists(seg_centers_base_path)
+        seg_centers_end_path = input_config["seg_centers_end"]
+        seg_centers_output_path : Path = output_zarr / output_config["seg_centers_file"]  # put it inside the zarr
+        if straightened:
             _, pad_widths = _get_store_padding(raw_store)
             offsets = [pad_width[0] for pad_width in pad_widths]
-            convert_tracks(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
+        else:
+            offsets = None
+        convert_points(seg_centers_base_path, seg_centers_end_path, seg_centers_output_path, time_range=time_range, offsets=offsets)

@@ -1,0 +1,31 @@
+
+# Input data location
+[input]
+base_path = "/Volumes/funke/data/ForCarolineFromRyan"
+raw_path = "RegB/Twisted"
+seam_cell_path = "RegA/Twisted"
+seg_path = "RegC/Twisted"
+manual_tracks_base = "Annotations/Twisted/Hand_Annotated"
+manual_tracks_end = "integrated_annotation/annotations.csv"
+seam_cell_tracks_base = "Seam_Cells/Twisted"
+seam_cell_tracks_end = "seam_cell_final/seam_cells.csv"
+seg_centers_base = "Annotations/Twisted/Carsen_Annotations"
+seg_centers_end = "integrated_annotation/annotations.csv"
+
+# Conversion parameters
+[conversion]
+straightened = false
+alignment = "center"
+time_range = [11, 85]
+
+
+# Output data location
+[output]
+base_path = "/Volumes/funke/data/lightsheet/shroff_c_elegans/post_twitching_neurons"
+zarr =  "twisted.zarr"
+raw_group = "RegB"
+seam_cell_group = "RegA"
+seg_group = "CellPose"
+manual_tracks_dir = "manual_tracks"
+seam_cell_tracks_dir = "seam_cell_tracks"
+seg_centers_file = "CellPoseCenters.csv"
