@@ -1,9 +1,9 @@
 from pathlib import Path
 import numpy as np
 import napari
-from motile_plugin.data_model import Tracks, SolutionTracks
-from motile_plugin.application_menus import MainApp
-from motile_plugin.data_views.views_coordinator.tracks_viewer import TracksViewer
+from motile_tracker.data_model import Tracks, SolutionTracks
+from motile_tracker.application_menus import MainApp
+from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 import argparse
 import funlib.persistence as fp
 import toml
@@ -54,6 +54,13 @@ if __name__ == "__main__":
         store = zarr_file / config["seg_group"]
         seg = fp.open_ds(store)[time_range[0]:time_range[1]]
         viewer.add_labels(data=seg, name="CellPose", blending="translucent_no_depth")
+
+    
+    if args.manual or args.seam_cell_tracks:
+        motile_widget = MainApp(viewer)
+        tracks_viewer = TracksViewer.get_instance(viewer)
+        viewer.window.add_dock_widget(motile_widget)
+    
     if args.manual:
         manual_dir = zarr_file / config["manual_tracks_dir"]
         _test_exists(manual_dir)
@@ -61,9 +68,6 @@ if __name__ == "__main__":
         if args.time_range is not None:
             _crop_tracks(tracks, time_range)
         solution_tracks = SolutionTracks.from_tracks(tracks)
-
-        motile_widget = MainApp(viewer)
-        tracks_viewer = TracksViewer.get_instance(viewer)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
     
     if args.seam_cell_tracks:
@@ -74,8 +78,6 @@ if __name__ == "__main__":
             _crop_tracks(tracks, time_range)
         solution_tracks = SolutionTracks.from_tracks(tracks)
 
-        motile_widget = MainApp(viewer)
-        tracks_viewer = TracksViewer.get_instance(viewer)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
 
     if args.seg_centers:

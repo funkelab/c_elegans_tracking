@@ -9,7 +9,7 @@ import argparse
 import toml
 import networkx as nx
 import pandas as pd
-from motile_plugin.data_model import Tracks
+from motile_tracker.data_model import Tracks
 import csv
 
 
@@ -109,7 +109,7 @@ def convert_raw_straightened(
     axis_names = ("t", "z", "y", "x")   
     dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
-    
+    print("preparing ds")
     target_array = fp.prepare_ds(
         store=output_store,
         shape=ds_shape,
@@ -208,6 +208,7 @@ def convert_tracks(
         _test_exists(file)
     
         df = pd.read_csv(file)
+        print(df.head(), df.columns)
         df["time"] = i - time_range[0]
         z_offset = offset[0]
         y_offset = offset[1]
@@ -215,6 +216,7 @@ def convert_tracks(
         df["z_voxels"] += z_offset
         df["y_voxels"] += y_offset
         df["x_voxels"] += x_offset
+        print(df.head(), df.columns)
         for _, row in df.iterrows():
             name = row["name"]
             attrs = {
@@ -239,7 +241,6 @@ def convert_points(
     time_range: tuple[int, int],
     offsets: list[Coordinate]
 ):  
-    print(output_file)
     with open(output_file, 'w') as f:
         header = ["id", "t", "z", "y", "x", "name"]
         writer = csv.DictWriter(f, fieldnames=header, extrasaction="ignore")
@@ -247,7 +248,6 @@ def convert_points(
 
         node_id = 0
         for i in tqdm(range(*time_range)):
-            print(i)
             offset = offsets[i - time_range[0]] if offsets is not None else [0, 0, 0]
             file = annotations_path / DIR_TEMPLATE.format(time=i) / path_after_time
             _test_exists(file)
@@ -332,8 +332,11 @@ if __name__ == "__main__":
         manual_end_path = input_config["manual_tracks_end"]
         manual_output_path : Path = output_zarr / output_config["manual_tracks_dir"]  # put it inside the zarr
         manual_output_path.mkdir(exist_ok=True, parents=False)
-        _, pad_widths = _get_store_padding(raw_store)
-        offsets = [pad_width[0] for pad_width in pad_widths]
+        if straightened:
+            _, pad_widths = _get_store_padding(raw_store)
+            offsets = [pad_width[0] for pad_width in pad_widths]
+        else:
+            offsets = None
         convert_tracks(manual_base_path, manual_end_path, manual_output_path, time_range=time_range, offsets=offsets)
     if args.seam_cell_tracks:
         seam_cell_base_path = data_base_path / input_config["seam_cell_tracks_base"]

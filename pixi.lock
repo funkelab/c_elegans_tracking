@@ -286,7 +286,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/f7/ba/2af7a60b45bf21375e111c1e2d5d721108d06c80e3d9a3cc1d767afe1731/lxml_html_clean-0.4.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c7/8b/92e9da1f28310a1f6572b5c55097b0c0ceb5e27486d85fb73b54f5a9b939/matplotlib-3.10.0-cp311-cp311-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/11/bc/d1b84419cec33e1350238488afc75f19bf92cae2eeb624dda5a937f45f63/motile-0.3.0-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/60/77/39a2798ee773afc2f5b92c16cc3755b953126ec14b798606cd52992a0ce6/motile_toolbox-0.3.5-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/14/f1/af9f46636bacfdc2feed95e3949b2eb7873da2b9ce5a415d42807fe3f48f/motile_toolbox-0.4.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b9/54/dd730b32ea14ea797530a4479b2ed46a6fb250f682a9cfb997e968bf0261/networkx-3.4.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e5/ae/580600f441f6fc05218bd6c9d5794f4aef072a7d9093b291f1c50a9db8bc/plotly-5.24.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cb/0e/bdc8274dc0585090b4e3432267d7be4dfbfd8971c0fa59167c711105a6bf/psycopg2-binary-2.9.10.tar.gz
@@ -524,7 +524,7 @@ packages:
 - pypi: .
   name: c-elegans-utils
   version: 0.0.1a0
-  sha256: e71ec12b380840577323b96947c15fdb4ad583ad8d0a8cea70893a93389ddabf
+  sha256: 55e826a8028cc59dd88108da6b92578c2a02384f637494665aa6aae482edff4f
   requires_dist:
   - funlib-geometry>=0.3.0,<0.4
   - motile>=0.3.0,<0.4
@@ -2283,39 +2283,10 @@ packages:
   - tomli ; extra == 'docs'
   - pytest ; extra == 'test'
   - pytest-cov ; extra == 'test'
-- pypi: ../motile_tracker
-  name: motile-plugin
-  version: 2.0.2.dev43+g2c584c4
-  sha256: cbf81f1a417e6b7e1c957d73f4e379078e2e768db172804c9eaa5196d0bfb21a
-  requires_dist:
-  - napari[all]
-  - numpy
-  - magicgui
-  - qtpy
-  - scikit-image
-  - motile>=0.3
-  - motile-toolbox==0.3.5
-  - pydantic
-  - tifffile[all]
-  - fonticon-fontawesome6
-  - pyqtgraph
-  - lxml-html-clean
-  - napari ; extra == 'testing'
-  - pyqt5 ; extra == 'testing'
-  - pytest ; extra == 'testing'
-  - pytest-cov ; extra == 'testing'
-  - pytest-qt ; extra == 'testing'
-  - myst-parser ; extra == 'docs'
-  - sphinx ; extra == 'docs'
-  - sphinx-autoapi ; extra == 'docs'
-  - sphinx-rtd-theme ; extra == 'docs'
-  - sphinxcontrib-video ; extra == 'docs'
-  requires_python: '>=3.10'
-  editable: true
-- pypi: https://files.pythonhosted.org/packages/60/77/39a2798ee773afc2f5b92c16cc3755b953126ec14b798606cd52992a0ce6/motile_toolbox-0.3.5-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/14/f1/af9f46636bacfdc2feed95e3949b2eb7873da2b9ce5a415d42807fe3f48f/motile_toolbox-0.4.0-py3-none-any.whl
   name: motile-toolbox
-  version: 0.3.5
-  sha256: f4d2b0d8ea270c17d34ba9b7f4de706a44d78d2b498577f2af0650820e4dd87a
+  version: 0.4.0
+  sha256: dd4f3feb1e96e2aca0b3fac7a199b469b3b44dc317cd981f02fdcf106ee80290
   requires_dist:
   - motile
   - networkx
@@ -2334,6 +2305,38 @@ packages:
   - pytest-unordered ; extra == 'dev'
   - ruff ; extra == 'dev'
   requires_python: '>=3.10'
+- pypi: ../motile_tracker
+  name: motile-tracker
+  version: 3.0.1.dev61+g388bd1e
+  sha256: e8d89178f11e606033ac1e6841c749b3f28d510baa7e0d17b438688f05208e5c
+  requires_dist:
+  - napari[all]
+  - numpy
+  - magicgui
+  - qtpy
+  - scikit-image
+  - motile>=0.3
+  - motile-toolbox==0.4.0
+  - pydantic
+  - tifffile[all]
+  - fonticon-fontawesome6
+  - pyqtgraph
+  - lxml-html-clean
+  - napari ; extra == 'testing'
+  - pyqt5 ; extra == 'testing'
+  - pytest ; extra == 'testing'
+  - pytest-cov ; extra == 'testing'
+  - pytest-qt ; extra == 'testing'
+  - myst-parser ; extra == 'docs'
+  - sphinx ; extra == 'docs'
+  - sphinx-autoapi ; extra == 'docs'
+  - sphinx-rtd-theme ; extra == 'docs'
+  - sphinxcontrib-video ; extra == 'docs'
+  - ruff ; extra == 'dev'
+  - pre-commit ; extra == 'dev'
+  - motile-tracker[dev,docs,testing] ; extra == 'all'
+  requires_python: '>=3.10'
+  editable: true
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/mpfr-4.2.1-hb693164_3.conda
   sha256: 4463e4e2aba7668e37a1b8532859191b4477a6f3602a5d6b4d64ad4c4baaeac5
   md5: 4e4ea852d54cc2b869842de5044662fb

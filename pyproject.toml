@@ -47,7 +47,12 @@ pip = ">=24.3.1,<25"
 
 [tool.pixi.pypi-dependencies]
 c-elegans-utils = { path = ".", editable = true }
-motile_plugin = { path = "../motile_tracker", editable = true }
+motile_tracker = { path = "../motile_tracker", editable = true }
+
+[tool.pixi.tasks]
+view_twisted = "python visualization/view_c_elegans.py visualization/twisted_remote.toml --raw --manual --seg --seg-centers"
+view_straightened = "python visualization/view_c_elegans.py visualization/straightened_local.toml --raw --manual --seg --seg-centers --seam-cell-tracks"
+tracking_demo = "python visualization/tracking_demo.py visualization/straightened_local.toml"
 
 
 # https://github.com/charliermarsh/ruff

@@ -9,4 +9,4 @@ seg_group = "CellPose"
 manual_tracks_dir = "manual_tracks"
 seam_cell_tracks_dir = "seam_cell_tracks"
 seg_centers_file = "CellPoseCenters.csv"
-time_range = [11, 85]
+time_range = [0, 74]
