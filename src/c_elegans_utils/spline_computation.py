@@ -1,0 +1,56 @@
+import numpy as np
+from scipy.interpolate import CubicSpline
+from pathlib import Path
+import pandas as pd
+from typing import Iterable
+from motile_tracker.data_model import SolutionTracks
+
+class CubicSpline3D:
+    def __init__(self, s: Iterable, locations: np.ndarray, bc_type: str="natural"):
+        """A helper class for combining three splines, one for each dimension x y and z.
+
+        Args:
+            s (Iterable): The cell "locations" along the main worm axis. Defined by the
+            index of the seam cells in the following list (usually 0 to 10)
+                a0 h0 h1 h2 v1 v2 v3 v4 v5 v6 t
+            locations (np.ndarray): an array with shape (n, 3), where n is usually 11,
+                representing the 3D locations of the points along the parameterization
+                of the spline
+            bc_type (str, optional): boundary condition passed to scipy.interpolation.CubicSpline. 
+                Defaults to "natural".
+        """
+        self.splines: Iterable[CubicSpline] = [CubicSpline(s, locations[:,dim], bc_type=bc_type) for dim in range(locations.shape[1])]
+
+    def interpolate(self, index: float):
+        """Find the point at a given index along the paramaterization of the spline
+        (E.g. at that location between the lattice points 0 to 11)
+
+        Args:
+            index (float): A number between 0 and 10 representing the location along
+            the worm's main axis paramaterized by the lattice points.
+
+        Returns:
+            list[float]: The [x, y, z] location of that point on the 3D spline.
+        """
+        return [spline([index])[0] for spline in self.splines]
+
+def compute_central_spline_csv(csvfile: Path):
+    df = pd.read_csv(csvfile, index_col="name")
+    df.index = df.index.str.lower()
+    names = ["a0", "h0", "h1", "h2", "v1", "v2", "v3", "v4", "v5", "v6", "T"]
+    centers = []
+    for name in names:
+        right = _get_loc(df, name + "R")
+        left = _get_loc(df, name + "L")
+        center = [(right[d] + left[d]) / 2 for d in range(3)]
+        centers.append(center)
+
+    indices = list(range(len(names)))
+    return CubicSpline3D(indices, np.array(centers))
+
+def _get_loc(df : pd.DataFrame, name: str):
+    row = df.loc[name.lower()]
+    return row["x_voxels"], row["y_voxels"], row["z_voxels"]
+
+# def compute_central_spline_tracks(tracks: SolutionTracks):
+    
