@@ -9,7 +9,7 @@ import funlib.persistence as fp
 import toml
 import networkx as nx
 import pandas as pd
-from c_elegans_utils.spline_computation import compute_central_spline_tracks
+from c_elegans_utils.spline_computation import compute_central_spline
 from napari.layers import Shapes
 
 def _test_exists(path):
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         solution_tracks = SolutionTracks.from_tracks(tracks)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
     
-    if args.seam_cell_tracks or args.center_spline:
+    if args.seam_cell_tracks:
         seam_cell_tracks_dir = zarr_file / config["seam_cell_tracks_dir"]
         _test_exists(seam_cell_tracks_dir)
         tracks = Tracks.load(seam_cell_tracks_dir)
@@ -93,11 +93,13 @@ if __name__ == "__main__":
         solution_tracks = SolutionTracks.from_tracks(tracks)
         if args.seam_cell_tracks:
             tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
-        if args.center_spline:
-            splines = compute_central_spline_tracks(solution_tracks)
-            shapes_layer = view_splines(splines)
-            viewer.add_layer(shapes_layer)
-
+    
+    if args.center_spline:
+        lattice_points_dir = zarr_file / config["lattice_points_dir"]
+        _test_exists(lattice_points_dir)
+        splines = compute_central_spline(lattice_points_dir, time_range=time_range)
+        shapes_layer = view_splines(splines)
+        viewer.add_layer(shapes_layer)
 
     if args.seg_centers:
         seg_centers_file = zarr_file / config["seg_centers_file"]

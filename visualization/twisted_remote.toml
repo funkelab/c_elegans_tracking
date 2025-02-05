@@ -8,5 +8,6 @@ seam_cell_group = "RegA"
 seg_group = "CellPose"
 manual_tracks_dir = "manual_tracks"
 seam_cell_tracks_dir = "seam_cell_tracks"
+lattice_points_dir = "lattice_points"
 seg_centers_file = "CellPoseCenters.csv"
 time_range = [0, 74]

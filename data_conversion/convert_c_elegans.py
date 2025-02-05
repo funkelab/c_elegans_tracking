@@ -312,6 +312,7 @@ if __name__ == "__main__":
     parser.add_argument("--seg", action="store_true")
     parser.add_argument("--manual", action="store_true")
     parser.add_argument("--seam-cell-tracks", action="store_true")
+    parser.add_argument("--lattice-points", action="store_true")
     parser.add_argument("--seg-centers", action="store_true")
     args = parser.parse_args()
     config = toml.load(args.config)
@@ -386,7 +387,19 @@ if __name__ == "__main__":
             offsets = [pad_width[0] for pad_width in pad_widths]
         else:
             offsets = None
-        convert_lattice_points(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
+        convert_tracks(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
+    if args.lattice_points:
+        seam_cell_base_path = data_base_path / input_config["seam_cell_tracks_base"]
+        _test_exists(seam_cell_base_path)
+        seam_cell_end_path = input_config["seam_cell_tracks_end"]
+        lattice_point_output_path : Path = output_zarr / output_config["lattice_points_dir"]  # put it inside the zarr
+        lattice_point_output_path.mkdir(exist_ok=True, parents=False)
+        if straightened:
+            _, pad_widths = _get_store_padding(raw_store)
+            offsets = [pad_width[0] for pad_width in pad_widths]
+        else:
+            offsets = None
+        convert_lattice_points(seam_cell_base_path, seam_cell_end_path, lattice_point_output_path, time_range=time_range, offsets=offsets)
     if args.seg_centers:
         seg_centers_base_path = data_base_path / input_config["seg_centers_base"]
         _test_exists(seg_centers_base_path)
