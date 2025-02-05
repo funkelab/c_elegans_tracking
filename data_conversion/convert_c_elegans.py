@@ -1,18 +1,18 @@
-from pathlib import Path
-import tifffile
-import numpy as np
-from tqdm import tqdm
-import zarr
-from funlib.geometry import Roi, Coordinate
-import funlib.persistence as fp
 import argparse
-import toml
-import networkx as nx
-import pandas as pd
-from motile_tracker.data_model import Tracks
 import csv
-import zarr.creation
+from pathlib import Path
 
+import funlib.persistence as fp
+import networkx as nx
+import numpy as np
+import pandas as pd
+import tifffile
+import toml
+import zarr
+import zarr.creation
+from funlib.geometry import Coordinate, Roi
+from motile_tracker.data_model import Tracks
+from tqdm import tqdm
 
 DIR_TEMPLATE = "Decon_reg_{time}"
 STRAIGHT_FILE_TEMPLATE = "Decon_reg_{time}_straight.tif"

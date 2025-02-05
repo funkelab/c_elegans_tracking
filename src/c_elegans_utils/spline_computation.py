@@ -1,9 +1,10 @@
-import numpy as np
-from scipy.interpolate import CubicSpline
 from pathlib import Path
-import pandas as pd
 from typing import Iterable
+
+import numpy as np
+import pandas as pd
 import zarr
+from scipy.interpolate import CubicSpline
 
 
 class CubicSpline3D:

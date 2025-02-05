@@ -63,7 +63,7 @@ ruff = "*"
 
 [tool.pixi.feature.dev.tasks]
 format = "ruff format ."
-lint = "ruff check ."
+lint = "ruff check . --fix"
 
 [tool.pixi.environments]
 dev = ["dev"]

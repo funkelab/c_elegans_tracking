@@ -1,15 +1,15 @@
-from pathlib import Path
-import tifffile
-import numpy as np
-import napari
-import pandas as pd
-from tqdm import tqdm
-import networkx as nx
-from motile_plugin.data_model import SolutionTracks
-from motile_plugin.application_menus import MainApp
-from motile_plugin.data_views.views_coordinator.tracks_viewer import TracksViewer
 import argparse
+from pathlib import Path
 
+import napari
+import networkx as nx
+import numpy as np
+import pandas as pd
+import tifffile
+from motile_plugin.application_menus import MainApp
+from motile_plugin.data_model import SolutionTracks
+from motile_plugin.data_views.views_coordinator.tracks_viewer import TracksViewer
+from tqdm import tqdm
 
 DIR_TEMPLATE = "Decon_reg_{time}"
 STRAIGHT_FILE_TEMPLATE = "Decon_reg_{time}_straight.tif"

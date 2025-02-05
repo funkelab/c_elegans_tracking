@@ -1,7 +1,9 @@
-import numpy as np
-from c_elegans_utils.spline_computation import CubicSpline3D, compute_central_spline_csv
 import os
 from pathlib import Path
+
+import numpy as np
+
+from c_elegans_utils.spline_computation import CubicSpline3D, compute_central_spline_csv
 
 
 def test_cubic_spline_3d():

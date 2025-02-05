@@ -1,16 +1,17 @@
-from pathlib import Path
-import numpy as np
-import napari
-from motile_tracker.data_model import Tracks, SolutionTracks
-from motile_tracker.application_menus import MainApp
-from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 import argparse
+from pathlib import Path
+
 import funlib.persistence as fp
-import toml
-import networkx as nx
+import napari
+import numpy as np
 import pandas as pd
-from c_elegans_utils.spline_computation import compute_central_spline
+import toml
+from motile_tracker.application_menus import MainApp
+from motile_tracker.data_model import SolutionTracks, Tracks
+from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 from napari.layers import Shapes
+
+from c_elegans_utils.spline_computation import compute_central_spline
 
 
 def _test_exists(path):

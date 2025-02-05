@@ -1,15 +1,15 @@
-from pathlib import Path
-import numpy as np
-import napari
-from motile_plugin.data_model import Tracks, SolutionTracks
-from motile_plugin.motile.backend import MotileRun
-from motile_plugin.application_menus import MainApp
-from motile_plugin.data_views.views_coordinator.tracks_viewer import TracksViewer
 import argparse
+from pathlib import Path
+
 import funlib.persistence as fp
-import toml
-import networkx as nx
+import napari
+import numpy as np
 import pandas as pd
+import toml
+from motile_plugin.application_menus import MainApp
+from motile_plugin.data_model import SolutionTracks, Tracks
+from motile_plugin.data_views.views_coordinator.tracks_viewer import TracksViewer
+from motile_plugin.motile.backend import MotileRun
 
 
 def _test_exists(path):
