@@ -1,14 +1,14 @@
 
 # Input data location
 [input]
-base_path = "/Volumes/funke/data/ForCarolineFromRyan"
+base_path = "/Volumes/funke/data/ForCarolineFromRyan/January_2025"
 raw_path = "RegB/Straightened"
 seam_cell_path = "RegA/Straightened"
 seg_path = "RegC/Straightened"
 manual_tracks_base = "Annotations/Straightened/Hand_Annotated"
 manual_tracks_end = "straightened_annotations/straightened_annotations.csv"
 seam_cell_tracks_base = "Seam_Cells/Straightened"
-seam_cell_tracks_end = "straightened_seamcells/straightened_seamcells.csv"
+seam_cell_tracks_end = "straightened_lattice/straightened_lattice.csv"
 seg_centers_base = "Annotations/Straightened/Carsen_Annotations"
 seg_centers_end = "straightened_annotations/straightened_annotations.csv"
 
@@ -27,5 +27,5 @@ raw_group = "RegB"
 seam_cell_group = "RegA"
 seg_group = "CellPose"
 manual_tracks_dir = "manual_tracks"
-seam_cell_tracks_dir = "seam_cell_tracks"
+seam_cell_tracks_dir = "lattice_points"
 seg_centers_file = "CellPoseCenters.csv"

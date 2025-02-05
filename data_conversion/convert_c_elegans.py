@@ -11,6 +11,7 @@ import networkx as nx
 import pandas as pd
 from motile_tracker.data_model import Tracks
 import csv
+import zarr.creation
 
 
 DIR_TEMPLATE = "Decon_reg_{time}"
@@ -55,6 +56,7 @@ def get_center_pad_widths(arr_shapes: list[Coordinate], target_shape: Coordinate
         half_pad_amt = pad_amt // 2
         pad_widths.append((half_pad_amt, pad_amt - half_pad_amt))
     return pad_widths
+
 def _get_store_padding(store) -> tuple[Coordinate, list[tuple[Coordinate, Coordinate]]]:
     """_summary_
 
@@ -109,7 +111,7 @@ def convert_raw_straightened(
     axis_names = ("t", "z", "y", "x")   
     dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
-    print("preparing ds")
+    
     target_array = fp.prepare_ds(
         store=output_store,
         shape=ds_shape,
@@ -208,7 +210,6 @@ def convert_tracks(
         _test_exists(file)
     
         df = pd.read_csv(file)
-        print(df.head(), df.columns)
         df["time"] = i - time_range[0]
         z_offset = offset[0]
         y_offset = offset[1]
@@ -216,7 +217,6 @@ def convert_tracks(
         df["z_voxels"] += z_offset
         df["y_voxels"] += y_offset
         df["x_voxels"] += x_offset
-        print(df.head(), df.columns)
         for _, row in df.iterrows():
             name = row["name"]
             attrs = {
@@ -233,6 +233,43 @@ def convert_tracks(
     print(f"Graph has {graph.number_of_nodes()} nodes and {graph.number_of_edges()} edges")
     tracks = Tracks(graph, ndim=4)
     tracks.save(output_path)
+
+def convert_lattice_points(
+    annotations_path: Path,
+    path_after_time: str,
+    output_path: Path,
+    time_range: tuple[int, int],
+    offsets: list[Coordinate] | None,
+):
+    array = np.zeros(shape=(time_range[1] - time_range[0], 11, 2, 3))
+    names = ["a0", "h0", "h1", "h2", "v1", "v2", "v3", "v4", "v5", "v6", "t"]
+    sides = ["r", "l"]
+    axis_names = ["z", "y", "x"]
+
+    for i in tqdm(range(*time_range)):
+        offset = offsets[i - time_range[0]] if offsets is not None else [0, 0, 0]
+        file = annotations_path / DIR_TEMPLATE.format(time=i) / path_after_time
+        _test_exists(file)
+        df = pd.read_csv(file)
+        time = i - time_range[0]
+        z_offset, y_offset, x_offset = offset
+        df["z_voxels"] += z_offset
+        df["y_voxels"] += y_offset
+        df["x_voxels"] += x_offset
+        for _, row in df.iterrows():
+            pos = [row["z_voxels"], row["y_voxels"], row["x_voxels"]]
+            name = row["name"].lower()
+            seam_cell_name = name[0:-1]
+            if seam_cell_name not in names:
+                continue  # this is a virtual seam cell, skip it for now
+            seam_cell_idx = names.index(seam_cell_name)
+            side = name[-1]
+            side_idx = sides.index(side)
+            array[time, seam_cell_idx, side_idx, :] = pos
+
+    metadata = {"lattice_point_names": names, "sides": sides, "axis_names": axis_names}
+    zarray = zarr.creation.array(store=output_path, data=array, overwrite=True)
+    zarray.attrs.update(metadata)
 
 def convert_points(
     annotations_path: Path,
@@ -349,7 +386,7 @@ if __name__ == "__main__":
             offsets = [pad_width[0] for pad_width in pad_widths]
         else:
             offsets = None
-        convert_tracks(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
+        convert_lattice_points(seam_cell_base_path, seam_cell_end_path, seam_cell_output_path, time_range=time_range, offsets=offsets)
     if args.seg_centers:
         seg_centers_base_path = data_base_path / input_config["seg_centers_base"]
         _test_exists(seg_centers_base_path)
