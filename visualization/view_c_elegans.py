@@ -9,6 +9,8 @@ import funlib.persistence as fp
 import toml
 import networkx as nx
 import pandas as pd
+from c_elegans_utils.spline_computation import compute_central_spline_tracks
+from napari.layers import Shapes
 
 def _test_exists(path):
     assert path.exists(), f"{path} does not exist"
@@ -17,6 +19,17 @@ def _crop_tracks(tracks: Tracks, time_range):
     nodes_to_keep = [node for node, data in tracks.graph.nodes(data=True)
                      if data["time"] < time_range[1] and data["time"] >= time_range[0] ]
     tracks.graph = tracks.graph.subgraph(nodes_to_keep)
+
+def view_splines(splines):
+    layer = Shapes(ndim=4)
+    times = sorted(splines.keys())
+    for idx, time in enumerate(times):
+        spline = splines[time]
+        points = np.array([spline.interpolate(point) for point in np.linspace(1, 10, 100)])
+        times = np.ones(shape=(points.shape[0], 1)) * idx
+        points = np.hstack((times, points))
+        layer.add_paths([points])
+    return layer
 
 
 if __name__ == "__main__":
@@ -28,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("--seg", action="store_true")
     parser.add_argument("--manual", action="store_true")
     parser.add_argument("--seam-cell-tracks", action="store_true")
+    parser.add_argument("--center-spline", action="store_true")
     parser.add_argument("--seg-centers", action="store_true")
     args = parser.parse_args()
     config = toml.load(args.config)["data"]
@@ -70,15 +84,20 @@ if __name__ == "__main__":
         solution_tracks = SolutionTracks.from_tracks(tracks)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
     
-    if args.seam_cell_tracks:
+    if args.seam_cell_tracks or args.center_spline:
         seam_cell_tracks_dir = zarr_file / config["seam_cell_tracks_dir"]
         _test_exists(seam_cell_tracks_dir)
         tracks = Tracks.load(seam_cell_tracks_dir)
         if args.time_range is not None:
             _crop_tracks(tracks, time_range)
         solution_tracks = SolutionTracks.from_tracks(tracks)
+        if args.seam_cell_tracks:
+            tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
+        if args.center_spline:
+            splines = compute_central_spline_tracks(solution_tracks)
+            shapes_layer = view_splines(splines)
+            viewer.add_layer(shapes_layer)
 
-        tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
 
     if args.seg_centers:
         seg_centers_file = zarr_file / config["seg_centers_file"]

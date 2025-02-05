@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 from typing import Iterable
 from motile_tracker.data_model import SolutionTracks
+from motile_toolbox.candidate_graph import NodeAttr
 
 class CubicSpline3D:
     def __init__(self, s: Iterable, locations: np.ndarray, bc_type: str="natural"):
@@ -37,7 +38,7 @@ class CubicSpline3D:
 def compute_central_spline_csv(csvfile: Path):
     df = pd.read_csv(csvfile, index_col="name")
     df.index = df.index.str.lower()
-    names = ["a0", "h0", "h1", "h2", "v1", "v2", "v3", "v4", "v5", "v6", "T"]
+    names = ["a0", "h0", "h1", "h2", "v1", "v2", "v3", "v4", "v5", "v6", "t"]
     centers = []
     for name in names:
         right = _get_loc(df, name + "R")
@@ -52,5 +53,36 @@ def _get_loc(df : pd.DataFrame, name: str):
     row = df.loc[name.lower()]
     return row["x_voxels"], row["y_voxels"], row["z_voxels"]
 
-# def compute_central_spline_tracks(tracks: SolutionTracks):
+def compute_central_spline_tracks(tracks: SolutionTracks) -> dict[int, CubicSpline3D]:
+    names = ["a0", "h0", "h1", "h2", "v1", "v2", "v3", "v4", "v5", "v6", "t"]
+    sides = ["r", "l"]
+    times = {}  # mapping from time point to np array with seam cell locations
+    default_arr = np.zeros(shape=(len(names), 2, 3))
+
+    for node in tracks.graph.nodes():
+        time = tracks._get_node_attr(node, NodeAttr.TIME.value, required=True)
+        if time not in times:
+            times[time] = default_arr.copy()
+
+        name = tracks._get_node_attr(node, "name", required=True).lower()
+        seam_cell_name = name[0:-1]
+        if seam_cell_name not in names:
+            continue  # this is a virtual seam cell, skip it for now
+        seam_cell_idx = names.index(seam_cell_name)
+        side = name[-1]
+        side_idx = sides.index(side)
+        times[time][seam_cell_idx][side_idx] = tracks.get_position(node)
+
+
+    splines = {}
+    for time, locations in times.items():
+        centers = (locations[:,0] + locations[:,1]) / 2
+        indices = list(range(len(names)))
+        splines[time] = CubicSpline3D(indices, np.array(centers))
+    return splines
+
+
+
+
+        
     
