@@ -12,20 +12,28 @@ import pandas as pd
 from c_elegans_utils.spline_computation import compute_central_spline
 from napari.layers import Shapes
 
+
 def _test_exists(path):
     assert path.exists(), f"{path} does not exist"
 
+
 def _crop_tracks(tracks: Tracks, time_range):
-    nodes_to_keep = [node for node, data in tracks.graph.nodes(data=True)
-                     if data["time"] < time_range[1] and data["time"] >= time_range[0] ]
+    nodes_to_keep = [
+        node
+        for node, data in tracks.graph.nodes(data=True)
+        if data["time"] < time_range[1] and data["time"] >= time_range[0]
+    ]
     tracks.graph = tracks.graph.subgraph(nodes_to_keep)
+
 
 def view_splines(splines):
     layer = Shapes(ndim=4)
     times = sorted(splines.keys())
     for idx, time in enumerate(times):
         spline = splines[time]
-        points = np.array([spline.interpolate(point) for point in np.linspace(1, 10, 100)])
+        points = np.array(
+            [spline.interpolate(point) for point in np.linspace(1, 10, 100)]
+        )
         times = np.ones(shape=(points.shape[0], 1)) * idx
         points = np.hstack((times, points))
         layer.add_paths([points])
@@ -49,7 +57,7 @@ if __name__ == "__main__":
         time_range = args.time_range
     else:
         time_range = config["time_range"]
-    
+
     base_path = Path(config["base_path"])
     _test_exists(base_path)
     zarr_file = base_path / config["zarr"]
@@ -58,23 +66,27 @@ if __name__ == "__main__":
     viewer = napari.Viewer()
     if args.raw:
         store = zarr_file / config["raw_group"]
-        raw = fp.open_ds(store)[time_range[0]:time_range[1]]
+        raw = fp.open_ds(store)[time_range[0] : time_range[1]]
         viewer.add_image(data=raw, contrast_limits=(0, np.iinfo(np.uint16).max))
     if args.seam_cell_raw:
         store = zarr_file / config["seam_cell_group"]
-        seam_cell_raw = fp.open_ds(store)[time_range[0]:time_range[1]]
-        viewer.add_image(data=seam_cell_raw, contrast_limits=(0, np.iinfo(np.uint16).max), colormap="green", opacity=.66)
+        seam_cell_raw = fp.open_ds(store)[time_range[0] : time_range[1]]
+        viewer.add_image(
+            data=seam_cell_raw,
+            contrast_limits=(0, np.iinfo(np.uint16).max),
+            colormap="green",
+            opacity=0.66,
+        )
     if args.seg:
         store = zarr_file / config["seg_group"]
-        seg = fp.open_ds(store)[time_range[0]:time_range[1]]
+        seg = fp.open_ds(store)[time_range[0] : time_range[1]]
         viewer.add_labels(data=seg, name="CellPose", blending="translucent_no_depth")
 
-    
     if args.manual or args.seam_cell_tracks:
         motile_widget = MainApp(viewer)
         tracks_viewer = TracksViewer.get_instance(viewer)
         viewer.window.add_dock_widget(motile_widget)
-    
+
     if args.manual:
         manual_dir = zarr_file / config["manual_tracks_dir"]
         _test_exists(manual_dir)
@@ -83,7 +95,7 @@ if __name__ == "__main__":
             _crop_tracks(tracks, time_range)
         solution_tracks = SolutionTracks.from_tracks(tracks)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
-    
+
     if args.seam_cell_tracks:
         seam_cell_tracks_dir = zarr_file / config["seam_cell_tracks_dir"]
         _test_exists(seam_cell_tracks_dir)
@@ -93,7 +105,7 @@ if __name__ == "__main__":
         solution_tracks = SolutionTracks.from_tracks(tracks)
         if args.seam_cell_tracks:
             tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
-    
+
     if args.center_spline:
         lattice_points_dir = zarr_file / config["lattice_points_dir"]
         _test_exists(lattice_points_dir)
@@ -109,6 +121,8 @@ if __name__ == "__main__":
             points_df = points_df[points_df["t"] >= time_range[0]]
             points_df = points_df[points_df["t"] < time_range[1]]
         points = points_df[["t", "z", "y", "x"]].to_numpy()
-        viewer.add_points(data=points, name="cellpose_centers", size=5, face_color="pink")
+        viewer.add_points(
+            data=points, name="cellpose_centers", size=5, face_color="pink"
+        )
 
     napari.run()
