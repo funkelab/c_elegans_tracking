@@ -6,6 +6,7 @@ import funlib.persistence as fp
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pandas.errors
 import tifffile
 import toml
 import zarr
@@ -173,7 +174,7 @@ def convert_raw_twisted(
 ):
     # get the shapes of one frame
 
-    file = raw_path / TWISTED_FILE_TEMPLATE.format(time=11)
+    file = raw_path / TWISTED_FILE_TEMPLATE.format(time=time_range[0])
     assert file.is_file(), f"File {file} does not exist"
     tif = tifffile.TiffFile(file)
     num_z_slices = len(tif.pages)
@@ -191,7 +192,6 @@ def convert_raw_twisted(
         np.uint16
     )  # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
-    print(ds_shape, offset, voxel_size, axis_names)
     target_array = fp.prepare_ds(
         store=output_store,
         shape=ds_shape,
@@ -240,8 +240,10 @@ def convert_tracks(
         offset = offsets[i - time_range[0]] if offsets is not None else [0, 0, 0]
         file = annotations_path / DIR_TEMPLATE.format(time=i) / path_after_time
         _test_exists(file)
-
-        df = pd.read_csv(file)
+        try:
+            df = pd.read_csv(file)
+        except pandas.errors.EmptyDataError:
+            raise ValueError(f"{file} cannot be read by pandas - might be empty")
         df["time"] = i - time_range[0]
         z_offset = offset[0]
         y_offset = offset[1]
@@ -378,6 +380,7 @@ if __name__ == "__main__":
     else:
         alignment = None
     time_range = conv_config["time_range"]
+    print(time_range)
 
     # run conversion
     if args.raw:
