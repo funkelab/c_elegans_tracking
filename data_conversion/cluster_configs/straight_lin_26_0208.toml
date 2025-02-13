@@ -1,0 +1,32 @@
+
+# Input data location
+[input]
+base_path = "/nrs/funke/data/ForCarolineFromRyan/lin-26_datasets/0208_Pos4"
+raw_path = "RegB/Straightened"
+seam_cell_path = "RegA/Straightened"
+seg_path = "RegC/Straightened"
+manual_tracks_base = "Annotations/Straightened/Hand_Annotated"
+manual_tracks_end = "straightened_annotations/straightened_annotations.csv"
+seam_cell_tracks_base = "Seam_Cells/Straightened"
+seam_cell_tracks_end = "straightened_seamcells/straightened_seamcells.csv"
+seg_centers_base = "Annotations/Straightened/Carsen_Annotations"
+seg_centers_end = "straightened_annotations/straightened_annotations.csv"
+
+# Conversion parameters
+[conversion]
+straightened = true
+alignment = "center"
+time_range = [22, 131]
+
+
+# Output data location
+[output]
+base_path = "/nrs/funke/data/lightsheet/shroff_c_elegans/lin_26_0208_Pos4"
+zarr =  "straightened.zarr"
+raw_group = "RegB"
+seam_cell_group = "RegA"
+seg_group = "CellPose"
+manual_tracks_dir = "manual_tracks"
+seam_cell_tracks_dir = "seam_cell_tracks"
+lattice_points_dir = "lattice_points"
+seg_centers_file = "CellPoseCenters.csv"

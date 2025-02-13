@@ -1,0 +1,33 @@
+
+# Input data location
+[input]
+base_path = "/nrs/funke/data/ForCarolineFromRyan/lin-26_datasets/0208_Pos4"
+raw_path = "RegA/Twisted"
+seam_cell_path = "RegB/Twisted"
+seg_path = "RegC/Twisted"
+manual_tracks_base = "Annotations/Twisted/Hand_Annotated"
+manual_tracks_end = "integrated_annotation/annotations.csv"
+# the straightened and twisted lattices are flipped:(
+seam_cell_tracks_base = "Seam_Cells/Hand_Annotated/Straightened" 
+seam_cell_tracks_end = "straightened_lattice/straightened_lattice.csv"
+seg_centers_base = "Annotations/Twisted/CellPose_Annotations"
+seg_centers_end = "integrated_annotation/annotations.csv"
+
+# Conversion parameters
+[conversion]
+straightened = false
+alignment = "center"
+time_range = [22, 131]
+
+
+# Output data location
+[output]
+base_path = "/nrs/funke/data/lightsheet/shroff_c_elegans/lin_26_0208_Pos4"
+zarr =  "twisted.zarr"
+raw_group = "raw"
+seam_cell_group = "seam_cell_raw"
+seg_group = "CellPose"
+manual_tracks_dir = "manual_tracks"
+seam_cell_tracks_dir = "seam_cell_tracks"
+lattice_points_dir = "lattice_points"
+seg_centers_file = "CellPoseCenters.csv"
