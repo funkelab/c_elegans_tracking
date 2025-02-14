@@ -26,7 +26,7 @@ class CubicSpline3D:
             for dim in range(locations.shape[1])
         ]
 
-    def interpolate(self, index: float):
+    def interpolate(self, indices: np.ndarray):
         """Find the point at a given index along the paramaterization of the spline
         (E.g. at that location between the lattice points 0 to 11)
 
@@ -37,7 +37,7 @@ class CubicSpline3D:
         Returns:
             list[float]: The [x, y, z] location of that point on the 3D spline.
         """
-        return [spline([index])[0] for spline in self.splines]
+        return np.stack([spline(indices) for spline in self.splines], axis=1)
 
 
 def compute_central_spline_csv(csvfile: Path):

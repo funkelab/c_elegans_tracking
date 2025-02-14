@@ -45,6 +45,8 @@ pyqt = ">=5.15.9,<6"
 ipykernel = ">=6.29.5,<7"
 pip = ">=24.3.1,<25"
 pytest = ">=8.3.4,<9"
+matplotlib = ">=3.10.0,<4"
+pyqtgraph = ">=0.13.7,<0.14"
 
 [tool.pixi.pypi-dependencies]
 c-elegans-utils = { path = ".", editable = true }
