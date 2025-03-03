@@ -1,26 +1,25 @@
 import argparse
 from pathlib import Path
+from warnings import warn
 
 import funlib.persistence as fp
 import napari
 import napari.layers
 import numpy as np
 import pandas as pd
+import pyqtgraph as pg
 from motile_tracker.application_menus import MainApp
 from motile_tracker.data_model import SolutionTracks, Tracks
 from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 from napari.layers import Shapes
 from qtpy.QtWidgets import (
-    QGroupBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
-from warnings import warn
-import pyqtgraph as pg
 
-from c_elegans_utils.spline_computation import compute_central_spline, CubicSpline3D
 from c_elegans_utils.dist_to_spline import dist_to_spline
+from c_elegans_utils.spline_computation import CubicSpline3D, compute_central_spline
 
 
 def _test_exists(path):
@@ -34,6 +33,11 @@ def _crop_tracks(tracks: Tracks, time_range):
         if data["time"] < time_range[1] and data["time"] >= time_range[0]
     ]
     tracks.graph = tracks.graph.subgraph(nodes_to_keep)
+    if time_range[0] > 0:
+        for node in nodes_to_keep:
+            tracks.graph.nodes[node]["time"] = (
+                tracks.graph.nodes[node]["time"] - time_range[0]
+            )
 
 
 def view_splines(splines: dict[int, CubicSpline3D]):
@@ -46,6 +50,7 @@ def view_splines(splines: dict[int, CubicSpline3D]):
         points = np.hstack((times, points))
         layer.add_paths([points])
     return layer
+
 
 class SplineDistanceWidget(QWidget):
     def __init__(self, viewer: napari.Viewer, splines: dict[int, CubicSpline3D]):
@@ -63,12 +68,20 @@ class SplineDistanceWidget(QWidget):
     def compute_spline_distances(self):
         active_layer = viewer.layers.selection.active
         if not isinstance(active_layer, napari.layers.Points):
-            warn("Please select a point in a points layer before computing spline distances")
+            warn(
+                "Please select a point in a points layer before computing spline "
+                "distances",
+                stacklevel=2,
+            )
             return
         selected_points = active_layer.selected_data
         print(selected_points)
         if len(selected_points) == 0:
-            warn("Please select a point in a points layer before computing spline distances")
+            warn(
+                "Please select a point in a points layer before computing spline "
+                "distances",
+                stacklevel=2,
+            )
             return
         self.dist_plot.getPlotItem().clear()
         for point in selected_points:
@@ -96,7 +109,15 @@ class SplineDistanceWidget(QWidget):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("dataset", choices=["post_twitching_neurons", "lin_26_0208_Pos4", "lin_26_0213_Pos3", "lin_26_0315_Pos4"])
+    parser.add_argument(
+        "dataset",
+        choices=[
+            "post_twitching_neurons",
+            "lin_26_0208_Pos4",
+            "lin_26_0213_Pos3",
+            "lin_26_0315_Pos4",
+        ],
+    )
     parser.add_argument("--time-range", nargs=2, type=int, default=None)
     parser.add_argument("-c", "--cluster", action="store_true")
     parser.add_argument("-s", "--straightened", action="store_true")
@@ -120,16 +141,17 @@ if __name__ == "__main__":
     lattice_points_dir = "lattice_points"
     seg_centers_file = "CellPoseCenters.csv"
 
-
     if args.time_range is not None:
         time_range = args.time_range
     else:
         time_range = None
-    
+
     mount_path = Path("/nrs") if args.cluster else Path("/Volumes")
     base_path = mount_path / "funke/data/lightsheet/shroff_c_elegans" / args.dataset
     _test_exists(base_path)
-    zarr_file = base_path / ("straightened.zarr" if args.straightened else "twisted.zarr")
+    zarr_file = base_path / (
+        "straightened.zarr" if args.straightened else "twisted.zarr"
+    )
     _test_exists(zarr_file)
 
     viewer = napari.Viewer()
@@ -202,6 +224,7 @@ if __name__ == "__main__":
         if time_range is not None:
             points_df = points_df[points_df["t"] >= time_range[0]]
             points_df = points_df[points_df["t"] < time_range[1]]
+            points_df["t"] = points_df["t"] - time_range[0]
         points = points_df[["t", "z", "y", "x"]].to_numpy()
         viewer.add_points(
             data=points, name="cellpose_centers", size=5, face_color="pink"
