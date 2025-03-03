@@ -18,8 +18,8 @@ class CubicSpline3D:
             locations (np.ndarray): an array with shape (n, 3), where n is usually 11,
                 representing the 3D locations of the points along the parameterization
                 of the spline
-            bc_type (str, optional): boundary condition passed to scipy.interpolation.CubicSpline.
-                Defaults to "natural".
+            bc_type (str, optional): boundary condition passed to
+                scipy.interpolation.CubicSpline. Defaults to "natural".
         """
         self.splines: Iterable[CubicSpline] = [
             CubicSpline(s, locations[:, dim], bc_type=bc_type)

@@ -878,7 +878,7 @@ packages:
 - pypi: .
   name: c-elegans-utils
   version: 0.0.1a0
-  sha256: c7b6640ac370ea237789404d96ccefbd897ce392ab1fa2db90879f83ec080a72
+  sha256: 947bd256e74b47dd069879c9643c368b2dc66977d048137cbde32042426dcf00
   requires_dist:
   - funlib-geometry>=0.3.0,<0.4
   - motile>=0.3.0,<0.4
@@ -3300,8 +3300,8 @@ packages:
   requires_python: '>=3.10'
 - pypi: ../motile_tracker
   name: motile-tracker
-  version: 3.0.1.dev93+gb9ea46c
-  sha256: e8d89178f11e606033ac1e6841c749b3f28d510baa7e0d17b438688f05208e5c
+  version: 3.1.4.dev0+g05b1cf5.d20250303
+  sha256: 1781f72898394c65fbe958fe903bb17e0506dfe870c30b7792f82333b107971d
   requires_dist:
   - napari[all]
   - numpy
@@ -3312,6 +3312,8 @@ packages:
   - motile-toolbox==0.4.0
   - pydantic
   - tifffile[all]
+  - tqdm
+  - dask[array]>=2021.10.0
   - fonticon-fontawesome6
   - pyqtgraph
   - lxml-html-clean

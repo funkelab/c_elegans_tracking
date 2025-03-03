@@ -54,11 +54,12 @@ motile_tracker = { path = "../motile_tracker", editable = true }
 
 
 [tool.pixi.tasks]
-view_twisted = "python visualization/view_c_elegans.py visualization/twisted_remote.toml --raw --manual --seg --seg-centers"
+view_twisted = "python visualization/view_c_elegans.py visualization/twisted_remote.toml --raw --manual --seg --center-spline --seam-cell-tracks"
 view_straightened = "python visualization/view_c_elegans.py visualization/straightened_local.toml --raw --manual --seg --seg-centers --seam-cell-tracks"
 view_straightened_remote = "python visualization/view_c_elegans.py visualization/straightened_remote.toml --raw --seg --manual --seam-cell-tracks"
 
 tracking_demo = "python visualization/tracking_demo.py visualization/straightened_local.toml"
+test = "pytest tests"
 
 [tool.pixi.feature.dev.dependencies]
 ruff = "*"
