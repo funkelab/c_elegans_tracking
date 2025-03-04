@@ -74,7 +74,7 @@ dev = ["dev"]
 
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
-line-length = 88
+line-length = 90
 target-version = "py38"
 
 [tool.ruff.lint]
@@ -92,4 +92,5 @@ extend-select = [
 ignore = [
   "S311",   # random numbers for cryptography
   "S101",   # asserts not allowed
+  "E731",   # don't define lambdas
 ]

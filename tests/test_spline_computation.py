@@ -4,7 +4,10 @@ from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from c_elegans_utils.spline_computation import CubicSpline3D, compute_central_spline_csv
+from c_elegans_utils.compute_central_spline import (
+    CubicSpline3D,
+    compute_central_spline_csv,
+)
 
 
 def test_cubic_spline_3d():
@@ -17,7 +20,18 @@ def test_cubic_spline_3d():
         locations[i] = [i, i, i]
 
     spline = CubicSpline3D(indices, locations)
-    assert_array_almost_equal(spline.interpolate([3]), np.array([[3,3,3,]]))
+    assert_array_almost_equal(
+        spline.interpolate([3]),
+        np.array(
+            [
+                [
+                    3,
+                    3,
+                    3,
+                ]
+            ]
+        ),
+    )
 
     func1 = lambda x: x**2 - 2 * x + 1
     func2 = lambda x: -5 * x**2 + x - 100
@@ -26,19 +40,40 @@ def test_cubic_spline_3d():
         locations[i] = [func1(i), func2(i), func1(i)]
 
     spline = CubicSpline3D(indices, locations)
-    assert_array_almost_equal(spline.interpolate([1]), np.array([[func1(1), func2(1), func1(1)]]))
+    assert_array_almost_equal(
+        spline.interpolate([1]), np.array([[func1(1), func2(1), func1(1)]])
+    )
+
+
+def test_normal_plane():
+    indices = np.arange(0, 11)
+    locations = np.zeros(shape=(11, 3))
+    for i in range(11):
+        locations[i] = [i, 0, 0]
+    spline = CubicSpline3D(indices, locations)
+
+    for i in range(11):
+        a, b, c, d = spline.get_normal_plane(i)
+        assert a == 1
+        assert b == 0
+        assert c == 0
+        assert d == -1 * i
 
 
 def test_get_center_spline():
     curr_path = Path(os.path.abspath(__file__))
     csv_path = curr_path.parent / "resources" / "lattice.csv"
     spline = compute_central_spline_csv(csv_path)
-    mid_point_a0 = np.array([[
-        (377.0514 + 370.98718) / 2,
-        (120.69736 + 106.26485) / 2,
-        (113.73046 + 179.51422) / 2,
-    ]])
-    
+    mid_point_a0 = np.array(
+        [
+            [
+                (377.0514 + 370.98718) / 2,
+                (120.69736 + 106.26485) / 2,
+                (113.73046 + 179.51422) / 2,
+            ]
+        ]
+    )
+
     assert_array_almost_equal(spline.interpolate([0]), mid_point_a0)
     test_point = spline.interpolate([0.5])[0]
     assert test_point[0] < 375

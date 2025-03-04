@@ -1,25 +1,22 @@
 import argparse
 from pathlib import Path
-from warnings import warn
 
 import funlib.persistence as fp
 import napari
 import napari.layers
 import numpy as np
 import pandas as pd
-import pyqtgraph as pg
+import zarr
 from motile_tracker.application_menus import MainApp
 from motile_tracker.data_model import SolutionTracks, Tracks
 from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 from napari.layers import Shapes
-from qtpy.QtWidgets import (
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
 
-from c_elegans_utils.dist_to_spline import dist_to_spline
-from c_elegans_utils.spline_computation import CubicSpline3D, compute_central_spline
+from c_elegans_utils.compute_central_spline import (
+    CubicSpline3D,
+    compute_central_splines,
+)
+from c_elegans_utils.spline_widget import WormSpaceWidget
 
 
 def _test_exists(path):
@@ -50,61 +47,6 @@ def view_splines(splines: dict[int, CubicSpline3D]):
         points = np.hstack((times, points))
         layer.add_paths([points])
     return layer
-
-
-class SplineDistanceWidget(QWidget):
-    def __init__(self, viewer: napari.Viewer, splines: dict[int, CubicSpline3D]):
-        super().__init__()
-        self.viewer = viewer
-        self.splines = splines
-        layout = QVBoxLayout()
-        button = QPushButton("Compute spline distances")
-        button.clicked.connect(self.compute_spline_distances)
-        self.dist_plot = self._plot_widget()
-        layout.addWidget(button)
-        layout.addWidget(self.dist_plot)
-        self.setLayout(layout)
-
-    def compute_spline_distances(self):
-        active_layer = viewer.layers.selection.active
-        if not isinstance(active_layer, napari.layers.Points):
-            warn(
-                "Please select a point in a points layer before computing spline "
-                "distances",
-                stacklevel=2,
-            )
-            return
-        selected_points = active_layer.selected_data
-        print(selected_points)
-        if len(selected_points) == 0:
-            warn(
-                "Please select a point in a points layer before computing spline "
-                "distances",
-                stacklevel=2,
-            )
-            return
-        self.dist_plot.getPlotItem().clear()
-        for point in selected_points:
-            data = active_layer.data[point]
-            time = int(data[0])
-            loc = data[1:]
-            ap_pos, dist = dist_to_spline([loc], self.splines[time])
-            dist = dist[0]
-            self.dist_plot.getPlotItem().plot(ap_pos, dist)
-
-    def _plot_widget(self) -> pg.PlotWidget:
-        """
-        Returns:
-            pg.PlotWidget: a widget containg an (empty) plot of the solver gap
-        """
-        gap_plot = pg.PlotWidget()
-        gap_plot.setBackground((37, 41, 49))
-        styles = {
-            "color": "white",
-        }
-        gap_plot.plotItem.setLabel("left", "Distance to center spline", **styles)
-        gap_plot.plotItem.setLabel("bottom", "Anterior-posterior position", **styles)
-        return gap_plot
 
 
 if __name__ == "__main__":
@@ -149,9 +91,7 @@ if __name__ == "__main__":
     mount_path = Path("/nrs") if args.cluster else Path("/Volumes")
     base_path = mount_path / "funke/data/lightsheet/shroff_c_elegans" / args.dataset
     _test_exists(base_path)
-    zarr_file = base_path / (
-        "straightened.zarr" if args.straightened else "twisted.zarr"
-    )
+    zarr_file = base_path / ("straightened.zarr" if args.straightened else "twisted.zarr")
     _test_exists(zarr_file)
 
     viewer = napari.Viewer()
@@ -211,10 +151,11 @@ if __name__ == "__main__":
     if args.center_spline or args.all:
         lattice_points_dir = zarr_file / lattice_points_dir
         _test_exists(lattice_points_dir)
-        splines = compute_central_spline(lattice_points_dir, time_range=time_range)
+        lattice_points = zarr.open(lattice_points_dir, "r")[:]
+        splines = compute_central_splines(lattice_points_dir, time_range=time_range)
         shapes_layer = view_splines(splines)
         viewer.add_layer(shapes_layer)
-        spline_dist_widget = SplineDistanceWidget(viewer, splines)
+        spline_dist_widget = WormSpaceWidget(viewer, lattice_points)
         viewer.window.add_dock_widget(spline_dist_widget)
 
     if args.seg_centers or args.all:
@@ -226,8 +167,6 @@ if __name__ == "__main__":
             points_df = points_df[points_df["t"] < time_range[1]]
             points_df["t"] = points_df["t"] - time_range[0]
         points = points_df[["t", "z", "y", "x"]].to_numpy()
-        viewer.add_points(
-            data=points, name="cellpose_centers", size=5, face_color="pink"
-        )
+        viewer.add_points(data=points, name="cellpose_centers", size=5, face_color="pink")
 
     napari.run()

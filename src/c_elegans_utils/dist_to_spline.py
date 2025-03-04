@@ -6,7 +6,7 @@ from numpy.typing import ArrayLike
 from scipy.signal import argrelextrema
 from scipy.spatial.distance import cdist
 
-from .spline_computation import CubicSpline3D
+from .compute_central_spline import CubicSpline3D
 
 
 def dist_to_spline(
