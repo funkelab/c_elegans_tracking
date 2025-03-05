@@ -151,7 +151,11 @@ if __name__ == "__main__":
     if args.center_spline or args.all:
         lattice_points_dir = zarr_file / lattice_points_dir
         _test_exists(lattice_points_dir)
-        lattice_points = zarr.open(lattice_points_dir, "r")[:]
+        lattice_points = zarr.open(lattice_points_dir, "r")
+        if time_range is not None:
+            lattice_points = lattice_points[time_range[0] : time_range[1]]
+        else:
+            lattice_points = lattice_points[:]
         splines = compute_central_splines(lattice_points_dir, time_range=time_range)
         shapes_layer = view_splines(splines)
         viewer.add_layer(shapes_layer)

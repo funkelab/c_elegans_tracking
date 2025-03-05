@@ -1,7 +1,5 @@
 
-# Data location
-[data]
-base_path = "/Volumes/funke/data/lightsheet/shroff_c_elegans/post_twitching_neurons"
+# Data locations
 zarr =  "twisted.zarr"
 raw_group = "RegB"
 seam_cell_group = "RegA"

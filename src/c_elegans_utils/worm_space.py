@@ -1,3 +1,4 @@
+import math
 from warnings import warn
 
 import numpy as np
@@ -39,7 +40,7 @@ class WormSpace:
         self.center_spline = CubicSpline3D(indices, center)
 
     def get_candidate_locations(
-        self, point: tuple[float, float, float], threshold: float | None = None
+        self, target_point: tuple[float, float, float], threshold: float | None = None
     ) -> list[tuple[float, float, float]]:
         """Get the possible worm space locations for a given point in input pixel space.
 
@@ -58,21 +59,25 @@ class WormSpace:
             of the point, in order (AP, ML, DV)
         """
         ap_locs, distances, local_minima_indices = dist_to_spline(
-            [point], self.center_spline
+            [target_point], self.center_spline
         )
         cand_ap_locs = []
         for idx in local_minima_indices:
             idx = idx[0]
+            # exclude the exact endpoints of the range
+            if idx == 0 or idx == len(ap_locs) - 1:
+                continue
             if threshold is None or distances[idx] <= threshold:
                 cand_ap_locs.append(ap_locs[idx])
 
         if len(cand_ap_locs) == 0:
             warn(
-                f"No candidate locations found for {point} with threshold {threshold}.",
+                f"No candidate locations found for {target_point} "
+                f"with threshold {threshold}.",
                 stacklevel=2,
             )
 
-        cand_locs = [self.get_worm_coords(point, s) for s in cand_ap_locs]
+        cand_locs = [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
         return cand_locs
 
     def get_worm_coords(
@@ -98,9 +103,12 @@ class WormSpace:
             tuple[float, float, float]: The worm space location of the point:
                 (AP, ML, DV)
         """
-        self.sanity_check(target_point, ap)
+        try:
+            self.sanity_check(target_point, ap)
+        except AssertionError as e:
+            print(e)
         center_point = self.center_spline.interpolate([ap])[0]
-        ml_basis, dv_basis = self.get_basis_vectors(ap)
+        ml_basis, dv_basis, tan_vec = self.get_basis_vectors(ap)
         # get the vector from the center point to the target point
         target_vec = np.array(target_point) - center_point
         # convert that vector to the new basis space
@@ -108,15 +116,19 @@ class WormSpace:
         dv = np.dot(target_vec, dv_basis)
         return ap, ml, dv
 
-    def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray]:
+    def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         normal_plane = self.center_spline.get_normal_plane(ap)
         right_point: np.ndarray = self.right_spline.interpolate([ap])[0]
-        tan_vec: np.ndarray = np.array(normal_plane[0], normal_plane[1], normal_plane[2])
-        ml_basis = tan_vec - right_point
+        center_point: np.ndarray = self.center_spline.interpolate([ap])[0]
+        tan_vec: np.ndarray = np.array(
+            [normal_plane[0], normal_plane[1], normal_plane[2]]
+        )
+        ml_basis = center_point - right_point
+        print(f"Dot product of ml basis and tan vec {np.dot(ml_basis, tan_vec)}")
         ml_basis = ml_basis / np.linalg.norm(ml_basis)
         dv_basis = np.cross(ml_basis, tan_vec)
         dv_basis = dv_basis / np.linalg.norm(dv_basis)
-        return ml_basis, dv_basis
+        return ml_basis, dv_basis, tan_vec
 
     def sanity_check(self, point, ap):
         normal_plane = self.center_spline.get_normal_plane(ap)
@@ -128,16 +140,20 @@ class WormSpace:
                 + normal_plane[2] * point[2]
                 + normal_plane[3]
             )
-            assert point_val == 0, f"Point {point} does not intersect plane ({point_val})"
+            assert math.isclose(
+                point_val, 0, abs_tol=0.001
+            ), f"Point {point} does not intersect plane ({point_val})"
 
         # make sure all three points are on the plane
         center_point = self.center_spline.interpolate([ap])[0]
         left_point = self.left_spline.interpolate([ap])[0]
         right_point = self.right_spline.interpolate([ap])[0]
         point_on_plane(center_point)
-        point_on_plane(left_point)
         point_on_plane(right_point)
+        point_on_plane(left_point)
         # Then make sure they form a line
         vec1 = left_point - center_point
         vec2 = right_point - center_point
-        assert np.dot(vec1, vec2) == np.linalg.norm(vec1) * np.linalg.norm(vec2)
+        assert np.dot(vec1, vec2) == np.linalg.norm(vec1) * np.linalg.norm(
+            vec2
+        ), f"Left and right points at {ap} are not colinear with center point"

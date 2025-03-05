@@ -4,7 +4,7 @@ import napari
 import napari.layers
 import numpy as np
 import pyqtgraph as pg
-from napari.layers import Shapes
+from napari.layers import Points, Shapes
 from qtpy.QtWidgets import (
     QPushButton,
     QVBoxLayout,
@@ -31,6 +31,8 @@ class WormSpaceWidget(QWidget):
         layout.addWidget(button)
         layout.addWidget(self.dist_plot)
         self.setLayout(layout)
+        # for debugging
+        self.viewer.add_layer(Points(data=np.array([[4, 125, 202, 209]]), name="target"))
 
     def compute_spline_distances(self):
         active_layer = self.viewer.layers.selection.active
@@ -52,12 +54,14 @@ class WormSpaceWidget(QWidget):
             return
         self.dist_plot.getPlotItem().clear()
         point = next(iter(selected_points))
-        print(point)
         data = active_layer.data[point]
+        print(f"target point {point} loc: {data}")
         time = int(data[0])
         loc = data[1:]
         worm_space = WormSpace(self.lattice_points[time])
+        self.display_splines(worm_space, time)
         cand_locs = worm_space.get_candidate_locations(loc)
+        print(f"candidate locations in worm space: {cand_locs}")
 
         # ap_pos, dist, local_minima = dist_to_spline([loc], spline)
         # dist = dist[0]
@@ -80,19 +84,54 @@ class WormSpaceWidget(QWidget):
         #       center_loc + basis2
         #    ])
 
-        self.display_worm_coords(cand_locs)
+        self.display_worm_coords(worm_space, cand_locs, time)
+
+    def display_splines(self, worm_space: WormSpace, time: int):
+        layer = Shapes(ndim=4)
+        splines = [
+            worm_space.center_spline,
+            worm_space.left_spline,
+            worm_space.right_spline,
+        ]
+        colors = ["white", "blue", "red"]
+        paths = []
+        for spline in splines:
+            points = spline.interpolate(np.linspace(-1, 11, 120))
+            times = np.ones(shape=(points.shape[0], 1)) * time
+            points = np.hstack((times, points))
+            paths.append(points)
+        layer.add_paths(paths, edge_color=colors)
+        self.viewer.add_layer(layer)
 
     def display_worm_coords(self, worm_space: WormSpace, cand_locs, time):
-        layer = Shapes(ndim=4)
+        shapes_layer = Shapes(ndim=4)
+        points_layer = Points(data=[], ndim=4, face_color="red", size=10)
         for loc in cand_locs:
             ap, ml, dv = loc
+            print(f"ap {ap}")
             center_loc = worm_space.center_spline.interpolate([ap])[0]
-            ml_basis, dv_basis = worm_space.get_basis_vectors(ap)
-            xaxis = [[time, *center_loc], [time, *(center_loc + ml_basis)]]
-            yaxis = [[time, *center_loc], [time, *(center_loc + dv_basis)]]
-            layer.add_lines([xaxis, yaxis], edge_color=["red", "blue"])
+            right_spline_loc = worm_space.right_spline.interpolate([ap])[0]
+            left_spline_loc = worm_space.left_spline.interpolate([ap])[0]
+            points = np.array([center_loc, left_spline_loc, right_spline_loc])
 
-        self.viewer.add_layer(layer)
+            times = np.ones(shape=(points.shape[0], 1)) * time
+            points = np.hstack((times, points))
+            print(points)
+            points_layer.add(points)
+
+            ml_basis, dv_basis, tan_vec = worm_space.get_basis_vectors(ap)
+            ml_basis = ml_basis * 100
+            dv_basis = dv_basis * 100
+            tan_vec = tan_vec / np.linalg.norm(tan_vec) * 100
+            xaxis = np.array([[time, *center_loc], [time, *(center_loc + ml_basis)]])
+            yaxis = np.array([[time, *center_loc], [time, *(center_loc + dv_basis)]])
+            zaxis = np.array([[time, *center_loc], [time, *(center_loc + tan_vec)]])
+            shapes_layer.add_lines(
+                [xaxis, yaxis, zaxis], edge_color=["red", "purple", "green"]
+            )
+            break
+        self.viewer.add_layer(shapes_layer)
+        self.viewer.add_layer(points_layer)
 
     def _plot_widget(self) -> pg.PlotWidget:
         """
