@@ -72,14 +72,19 @@ class WormSpace:
                     f"with threshold {threshold}.",
                     stacklevel=2,
                 )
-            cand_ap_locs = ap_locs[mins]
-            all_cand_locs.append(
-                [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
-            )
+                all_cand_locs.append([])
+            else:
+                cand_ap_locs = ap_locs[mins]
+                all_cand_locs.append(
+                    [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
+                )
         return all_cand_locs
 
     def get_worm_coords(
-        self, target_point: tuple[float, float, float], ap: float
+        self,
+        target_point: tuple[float, float, float],
+        ap: float,
+        ap_factor=75,
     ) -> tuple[float, float, float]:
         """Get the worm coordinates for a given point in input space and ap axis value.
         The ap axis value must be a local minima of the distance to central curve
@@ -112,7 +117,7 @@ class WormSpace:
         # convert that vector to the new basis space
         ml = np.dot(target_vec, ml_basis)
         dv = np.dot(target_vec, dv_basis)
-        return ap, ml, dv
+        return ap * ap_factor, ml, dv
 
     def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         right_point: np.ndarray = self.right_spline.interpolate([ap])[0]
@@ -152,3 +157,14 @@ class WormSpace:
             abs(np.linalg.norm(vec1) * np.linalg.norm(vec2)),
             abs_tol=0.01,
         ), f"Left and right points at {ap} are not colinear with center point"
+
+    def get_max_side_spline_distance(self):
+        max_dist = 0
+        for ap in range(0, 10):
+            center_point = self.center_spline.interpolate([ap])[0]
+            right_point = self.right_spline.interpolate([ap])[0]
+            dist = np.linalg.norm(center_point - right_point)
+            if dist > max_dist:
+                max_dist = dist
+
+        return max_dist

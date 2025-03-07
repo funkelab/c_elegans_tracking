@@ -1,0 +1,11 @@
+name = "threshold_candidates"
+[dataset]
+name = "post_twitching_neurons"
+time_range = [0,15]
+
+[solver_params]
+max_edge_distance = 40
+edge_selection_cost = -40
+appear_cost = 100
+division_cost = 500
+distance_cost = 1

@@ -24,8 +24,12 @@ def create_cand_graph(
 
     for time, locations in locations_by_time.items():
         worm_space = worm_spaces[time]
+        max_dist = worm_space.get_max_side_spline_distance()
+        print(f"max spline distance: {max_dist}")
         for location in locations:
-            cand_list = worm_space.get_candidate_locations(np.array([location]))[0]
+            cand_list = worm_space.get_candidate_locations(
+                np.array([location]), threshold=max_dist * 1.25
+            )[0]
             conflicting = []
             for cand in cand_list:
                 attrs = {NodeAttr.POS.value: np.array(cand), NodeAttr.TIME.value: time}

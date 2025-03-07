@@ -1,5 +1,4 @@
 import argparse
-from pathlib import Path
 
 import toml
 
@@ -20,15 +19,17 @@ if __name__ == "__main__":
     )
     parser.add_argument("--time-range", nargs=2, type=int, default=None)
     parser.add_argument("-c", "--cluster", action="store_true")
+    parser.add_argument("-n", "--name")
     args = parser.parse_args()
     config = toml.load(args.config)
     if args.dataset is not None:
         config["dataset"]["name"] == args.dataset
+    if args.name is not None:
+        config["name"] == args.name
     if args.time_range is not None:
         config["dataset"]["time_range"] == args.time_range
-
     # this makes an experiment directory with timestamp uuid and saves config
-    name = Path(args.config).stem
+    name = config["name"]
     experiment = Experiment(name, config, cluster=args.cluster)
     ds = experiment.dataset
     solver_params = experiment.solver_params
@@ -47,3 +48,4 @@ if __name__ == "__main__":
     )
 
     experiment.solution_graph = soln_graph
+    print(experiment.exp_base_dir)

@@ -61,6 +61,6 @@ def run_motile(
             name="distance",
         )
 
-    solver.solve(verbose=True, timeout=30)
+    solver.solve(verbose=False, timeout=90)
     soln_graph = graph_to_nx(solver.get_selected_subgraph())
     return solver, soln_graph
