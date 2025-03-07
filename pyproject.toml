@@ -61,6 +61,7 @@ view_straightened_remote = "python visualization/view_c_elegans.py visualization
 
 tracking_demo = "python visualization/tracking_demo.py visualization/straightened_local.toml"
 test = "pytest tests"
+experiment = "python experiments/run_tracking.py experiments/tracking_config.toml"
 
 [tool.pixi.feature.dev.dependencies]
 ruff = "*"

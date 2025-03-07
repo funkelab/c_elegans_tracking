@@ -4,7 +4,7 @@ import logging
 
 from motile import Solver, TrackGraph
 from motile.constraints import ExclusiveNodes, MaxChildren, MaxParents
-from motile.costs import Appear, EdgeDistance, Split
+from motile.costs import Appear, Disappear, EdgeDistance
 from motile_toolbox.candidate_graph import (
     NodeAttr,
     graph_to_nx,
@@ -32,7 +32,7 @@ def run_motile(
             constraints.
     """
     solver = Solver(TrackGraph(cand_graph, frame_attribute=NodeAttr.TIME.value))
-    solver.add_constraint(MaxChildren(2))
+    solver.add_constraint(MaxChildren(1))
     solver.add_constraint(MaxParents(1))
     solver.add_constraint(ExclusiveNodes(conflict_sets))
 
@@ -49,8 +49,8 @@ def run_motile(
         )
     if solver_params.appear_cost is not None:
         solver.add_cost(Appear(solver_params.appear_cost))
-    if solver_params.division_cost is not None:
-        solver.add_cost(Split(constant=solver_params.division_cost))
+    if solver_params.disappear_cost is not None:
+        solver.add_cost(Disappear(constant=solver_params.disappear_cost))
 
     if solver_params.distance_cost is not None:
         solver.add_cost(

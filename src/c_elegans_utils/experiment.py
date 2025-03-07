@@ -1,6 +1,6 @@
 import json
+import os
 from datetime import datetime
-from importlib.metadata import version
 from pathlib import Path
 
 import networkx as nx
@@ -11,6 +11,11 @@ from c_elegans_utils.tracking import SolverParams
 
 from .dataset import Dataset
 from .utils import _test_exists
+
+
+def get_git_commit_id():
+    git_hash = os.popen("git rev-parse HEAD").read().strip()
+    return git_hash
 
 
 class Experiment:
@@ -34,7 +39,7 @@ class Experiment:
 
     def _initialize_experiment(self):
         _test_exists(self.base_dir)
-        self.config["version"] = version("c_elegans_utils")
+        self.config["version"] = get_git_commit_id()
         self.timestamp = datetime.now()
         self.exp_base_dir.mkdir(exist_ok=True)
         with open(self.exp_base_dir / self.config_file, "w") as f:

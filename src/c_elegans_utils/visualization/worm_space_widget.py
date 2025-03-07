@@ -69,7 +69,9 @@ class CandidateNodeWidget(QWidget):
             point_loc (np.ndarray): 3d location
             worm_space (WormSpace): worm space at the time
         """
-        ap_pos, dist, local_minima = dist_to_spline([loc], worm_space.center_spline)
+        ap_pos, dist, local_minima = dist_to_spline(
+            [loc], worm_space.center_spline, worm_space.valid_range
+        )
         dist = dist[0]
         local_minima = local_minima[0]
         self.dist_plot.getPlotItem().plot(ap_pos, dist)
@@ -102,22 +104,31 @@ class WormSpaceWidget(QWidget):
         super().__init__()
         self.viewer = viewer
         self.lattice_points = lattice_points
+        self.time = self.viewer.dims.current_step[0]
+        self.worm_space = WormSpace(lattice_points[self.time])
         layout = QVBoxLayout()
         self.ap_slider = QDoubleSlider(Qt.Orientation.Horizontal)
-        self.ap_slider.setRange(-1, 11)
-        # self.ap_slider.setTracking(False)
+        self.ap_slider.setRange(
+            *self.worm_space.valid_range
+        )  # self.ap_slider.setTracking(False)
         self.ap_slider.valueChanged.connect(self.compute_bases)
+        self.viewer.dims.events.current_step.connect(self.change_step)
         layout.addWidget(QLabel("AP Position"))
         layout.addWidget(self.ap_slider)
         self.setLayout(layout)
         self._init_splines()
         self._init_basis_layers()
 
+    def change_step(self):
+        self.time = self.viewer.dims.current_step[0]
+        self.worm_space = WormSpace(self.lattice_points[self.time])
+        self.ap_slider.setRange(*self.worm_space.valid_range)
+
     def compute_bases(self):
         time = self.viewer.dims.current_step[0]
         ap = self.ap_slider.value()
-        worm_space = WormSpace(self.lattice_points[time])
-        self.display_basis_vectors(worm_space, ap, time)
+        # worm_space = WormSpace(self.lattice_points[time])
+        self.display_basis_vectors(self.worm_space, ap, time)
 
     def _init_splines(self):
         self.splines_layer = Shapes(ndim=4, name="splines")
@@ -132,7 +143,7 @@ class WormSpaceWidget(QWidget):
             colors = ["white", "blue", "red"]
             paths = []
             for spline in splines:
-                points = spline.interpolate(np.linspace(-1, 11, 120))
+                points = spline.interpolate(np.linspace(*worm_space.valid_range, 120))
                 times = np.ones(shape=(points.shape[0], 1)) * time
                 points = np.hstack((times, points))
                 paths.append(points)

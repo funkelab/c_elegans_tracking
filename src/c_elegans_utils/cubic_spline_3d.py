@@ -67,3 +67,14 @@ class CubicSpline3D:
             der = spline.derivative()
             derivatives.append(der(s))
         return derivatives
+
+    def get_dist_along_spline(self, start, end, num_samples=20) -> float:
+        sample_points = np.linspace(start, end, num=num_samples)
+        sample_locs = self.interpolate(sample_points)
+
+        o1 = sample_locs[:-1]
+        o2 = sample_locs[1:]
+        diff = np.abs(o1 - o2)
+        norms = np.linalg.norm(diff, axis=1)
+        total_dist = np.sum(norms)
+        return total_dist.item()

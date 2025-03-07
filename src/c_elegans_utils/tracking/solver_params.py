@@ -24,11 +24,10 @@ Objects further than this cannot be matched, but making this value larger will i
         title="Appear",
         description=r"""Cost for starting a new track. A higher value means fewer and longer selected tracks.""",
     )
-    division_cost: float | None = Field(
-        20,
-        title="Division",
-        description=r"""Cost for a track dividing. A higher value means fewer divisions.
-If this cost is higher than the appear cost, tracks will likely never divide.""",
+    disappear_cost: float | None = Field(
+        30,
+        title="Disappear",
+        description=r"""Cost for a track disappearing""",
     )
     distance_cost: float | None = Field(
         1,

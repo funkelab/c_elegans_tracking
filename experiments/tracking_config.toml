@@ -1,11 +1,12 @@
-name = "threshold_candidates"
+name = "reparameterization"
+
 [dataset]
 name = "post_twitching_neurons"
 time_range = [0,15]
 
 [solver_params]
-max_edge_distance = 40
-edge_selection_cost = -40
-appear_cost = 100
-division_cost = 500
+max_edge_distance = 60
+edge_selection_cost = -50
+appear_cost = 200
+disappear_cost = 200
 distance_cost = 1

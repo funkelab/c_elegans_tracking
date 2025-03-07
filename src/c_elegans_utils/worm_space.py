@@ -29,15 +29,19 @@ class WormSpace:
             lattice_points (np.ndarray): a numpy array with dims (11, 2, 3) for the
                 11 lattice points, 2 sides, and 3 spatial dimensions of the worm
         """
+        self.lattice_points = lattice_points
         right = lattice_points[:, 0]
         left = lattice_points[:, 1]
         center = (right + left) / 2
 
-        indices = list(range(lattice_points.shape[0]))
+        self.valid_range = (0, lattice_points.shape[0])
+
+        indices = list(range(*self.valid_range))
 
         self.right_spline = CubicSpline3D(indices, right)
         self.left_spline = CubicSpline3D(indices, left)
         self.center_spline = CubicSpline3D(indices, center)
+        self.reparameterize()
 
     def get_candidate_locations(
         self, target_points: np.ndarray, threshold: float | None = None
@@ -48,7 +52,7 @@ class WormSpace:
         Then finds local minima where distance is above threshold. (Warns if none exist).
         For each local minima, computes the worm space coordiantes of the point.
 
-        # TODO: endpoints look bad, don't use this strategy
+        # TODO: endpoints look bad, don't use this strategy past 0 and 10
 
         Args:
             target_points(np.ndarray): The input space location of the points
@@ -61,7 +65,7 @@ class WormSpace:
             of the point, in order (AP, ML, DV)
         """
         ap_locs, distances, local_minima_indices = dist_to_spline(
-            target_points, self.center_spline, threshold=threshold
+            target_points, self.center_spline, self.valid_range, threshold=threshold
         )
         all_cand_locs = []
 
@@ -84,7 +88,6 @@ class WormSpace:
         self,
         target_point: tuple[float, float, float],
         ap: float,
-        ap_factor=75,
     ) -> tuple[float, float, float]:
         """Get the worm coordinates for a given point in input space and ap axis value.
         The ap axis value must be a local minima of the distance to central curve
@@ -117,7 +120,7 @@ class WormSpace:
         # convert that vector to the new basis space
         ml = np.dot(target_vec, ml_basis)
         dv = np.dot(target_vec, dv_basis)
-        return ap * ap_factor, ml, dv
+        return ap, ml, dv
 
     def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         right_point: np.ndarray = self.right_spline.interpolate([ap])[0]
@@ -168,3 +171,20 @@ class WormSpace:
                 max_dist = dist
 
         return max_dist
+
+    def reparameterize(self):
+        right = self.lattice_points[:, 0]
+        left = self.lattice_points[:, 1]
+        center = (right + left) / 2
+
+        position = 0
+        indices = [0]
+        for i in range(1, 11):
+            distance = self.center_spline.get_dist_along_spline(i - 1, i, num_samples=25)
+            position += distance
+            indices.append(position)
+
+        self.right_spline = CubicSpline3D(indices, right)
+        self.left_spline = CubicSpline3D(indices, left)
+        self.center_spline = CubicSpline3D(indices, center)
+        self.valid_range = (0, position)

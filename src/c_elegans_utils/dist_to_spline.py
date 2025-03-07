@@ -12,6 +12,7 @@ from .compute_central_spline import CubicSpline3D
 def dist_to_spline(
     target_points: ArrayLike,
     spline: CubicSpline3D,
+    query_range: tuple[float, float],
     plot_path: str | Path | None = None,
     threshold: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, tuple[np.ndarray, ...]]:
@@ -37,7 +38,6 @@ def dist_to_spline(
             for each target point.
     """
     spacing = 0.1
-    query_range = [-1, 11]
     num_points = int((query_range[1] - query_range[0]) // spacing)
     cand_ap_pos = np.linspace(query_range[0], query_range[1], num=num_points)
     spline_points = spline.interpolate(cand_ap_pos)
