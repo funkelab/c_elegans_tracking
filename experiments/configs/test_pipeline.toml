@@ -1,0 +1,10 @@
+[dataset]
+name = "post_twitching_neurons"
+time_range = [0,5]
+
+[solver_params]
+max_edge_distance = 20
+edge_selection_cost = -20
+appear_cost = 30
+division_cost = 20
+distance_cost = 1

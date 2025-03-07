@@ -51,12 +51,7 @@ class CubicSpline3D:
         """
         # get the center point
         center = [spline(s) for spline in self.splines]
-        # get derivative (gives you A, B, C)
-        derivatives = []
-        for spline in self.splines:
-            der = spline.derivative()
-            print(f"Derivative at s {s}", der(s))
-            derivatives.append(der(s))
+        derivatives = self.get_tan_vec(s)
         # find D by setting dot product to 0
         d = -1 * sum([der * cen for der, cen in zip(derivatives, center)])
         derivatives.append(d)
@@ -64,3 +59,11 @@ class CubicSpline3D:
         a = derivatives[0]
         plane_params = tuple(d / a for d in derivatives) if a != 0 else tuple(derivatives)
         return plane_params
+
+    def get_tan_vec(self, s: float) -> list[float]:
+        # get derivative (gives you A, B, C)
+        derivatives = []
+        for spline in self.splines:
+            der = spline.derivative()
+            derivatives.append(der(s))
+        return derivatives

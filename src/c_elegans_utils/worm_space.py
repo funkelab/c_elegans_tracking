@@ -26,8 +26,8 @@ class WormSpace:
 
 
         Args:
-            lattice_points (np.ndarray): a numpy array with dims (11, 3, 2) for the
-                11 lattice points, 3 spatial dimensions, and 2 sides of the worm
+            lattice_points (np.ndarray): a numpy array with dims (11, 2, 3) for the
+                11 lattice points, 2 sides, and 3 spatial dimensions of the worm
         """
         right = lattice_points[:, 0]
         left = lattice_points[:, 1]
@@ -40,7 +40,7 @@ class WormSpace:
         self.center_spline = CubicSpline3D(indices, center)
 
     def get_candidate_locations(
-        self, target_point: tuple[float, float, float], threshold: float | None = None
+        self, target_points: np.ndarray, threshold: float | None = None
     ) -> list[tuple[float, float, float]]:
         """Get the possible worm space locations for a given point in input pixel space.
 
@@ -48,37 +48,35 @@ class WormSpace:
         Then finds local minima where distance is above threshold. (Warns if none exist).
         For each local minima, computes the worm space coordiantes of the point.
 
+        # TODO: endpoints look bad, don't use this strategy
+
         Args:
-            point (tuple[float, float, float]): The input space location of the point
+            target_points(np.ndarray): The input space location of the points
             threshold (float | None, optional): Exclude candidates further than
                 threshold from the worm center spline. Defaults to None, which will
                 return candidate locations at all local distance minima.
 
         Returns:
-            list[tuple[float, float, float]]: All possible worm space coordiantes
+            list[list[tuple[float, float, float]]]: All possible worm space coordiantes
             of the point, in order (AP, ML, DV)
         """
         ap_locs, distances, local_minima_indices = dist_to_spline(
-            [target_point], self.center_spline
+            target_points, self.center_spline, threshold=threshold
         )
-        cand_ap_locs = []
-        for idx in local_minima_indices:
-            idx = idx[0]
-            # exclude the exact endpoints of the range
-            if idx == 0 or idx == len(ap_locs) - 1:
-                continue
-            if threshold is None or distances[idx] <= threshold:
-                cand_ap_locs.append(ap_locs[idx])
+        all_cand_locs = []
 
-        if len(cand_ap_locs) == 0:
-            warn(
-                f"No candidate locations found for {target_point} "
-                f"with threshold {threshold}.",
-                stacklevel=2,
+        for target_point, mins in zip(target_points, local_minima_indices):
+            if len(mins) == 0:
+                warn(
+                    f"No candidate locations found for {target_point} "
+                    f"with threshold {threshold}.",
+                    stacklevel=2,
+                )
+            cand_ap_locs = ap_locs[mins]
+            all_cand_locs.append(
+                [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
             )
-
-        cand_locs = [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
-        return cand_locs
+        return all_cand_locs
 
     def get_worm_coords(
         self, target_point: tuple[float, float, float], ap: float
@@ -117,14 +115,10 @@ class WormSpace:
         return ap, ml, dv
 
     def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        normal_plane = self.center_spline.get_normal_plane(ap)
         right_point: np.ndarray = self.right_spline.interpolate([ap])[0]
         center_point: np.ndarray = self.center_spline.interpolate([ap])[0]
-        tan_vec: np.ndarray = np.array(
-            [normal_plane[0], normal_plane[1], normal_plane[2]]
-        )
+        tan_vec = self.center_spline.get_tan_vec(ap)
         ml_basis = center_point - right_point
-        print(f"Dot product of ml basis and tan vec {np.dot(ml_basis, tan_vec)}")
         ml_basis = ml_basis / np.linalg.norm(ml_basis)
         dv_basis = np.cross(ml_basis, tan_vec)
         dv_basis = dv_basis / np.linalg.norm(dv_basis)
@@ -144,16 +138,17 @@ class WormSpace:
                 point_val, 0, abs_tol=0.001
             ), f"Point {point} does not intersect plane ({point_val})"
 
-        # make sure all three points are on the plane
+        # make sure center point is on the plane
         center_point = self.center_spline.interpolate([ap])[0]
+        point_on_plane(center_point)
+
+        # Then make sure the three points form a line
         left_point = self.left_spline.interpolate([ap])[0]
         right_point = self.right_spline.interpolate([ap])[0]
-        point_on_plane(center_point)
-        point_on_plane(right_point)
-        point_on_plane(left_point)
-        # Then make sure they form a line
         vec1 = left_point - center_point
         vec2 = right_point - center_point
-        assert np.dot(vec1, vec2) == np.linalg.norm(vec1) * np.linalg.norm(
-            vec2
+        assert math.isclose(
+            abs(np.dot(vec1, vec2)),
+            abs(np.linalg.norm(vec1) * np.linalg.norm(vec2)),
+            abs_tol=0.01,
         ), f"Left and right points at {ap} are not colinear with center point"

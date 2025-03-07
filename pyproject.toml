@@ -21,7 +21,8 @@ version="v0.0.1_alpha"
 dependencies = [
   "funlib-geometry>=0.3.0,<0.4",
   "motile>=0.3.0,<0.4",
-  "funlib-persistence>=0.5.3,<0.6", "juliacall>=0.9.24,<0.10",
+  "funlib-persistence>=0.5.3,<0.6",
+  "motile-toolbox",
 ]
 
 # TODO: Get back dynamic versions
