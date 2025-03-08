@@ -30,7 +30,7 @@ dependencies = [
 
 [tool.pixi.project]
 channels = ["conda-forge", "funkelab", "gurobi"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64"]
 
 [tool.pixi.dependencies]
 ilpy = ">=0.4.1,<0.5"
