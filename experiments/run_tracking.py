@@ -33,7 +33,9 @@ if __name__ == "__main__":
     experiment = Experiment(name, config, cluster=args.cluster)
     ds = experiment.dataset
     solver_params = experiment.solver_params
-
+    seg_centers = ds.seg_centers
+    print(len(seg_centers))
+    
     cand_graph, conflict_sets = create_cand_graph(
         ds.seg_centers,
         ds.lattice_points,
@@ -42,10 +44,13 @@ if __name__ == "__main__":
     print(
         f"cand graph has {len(cand_graph.nodes)} nodes and {len(cand_graph.edges)} edges"
     )
-    solver, soln_graph = run_motile(cand_graph, conflict_sets, solver_params)
-    print(
-        f"soln graph has {soln_graph.number_of_nodes} nodes and {soln_graph.number_of_edges} edges"
-    )
+    # print("conflict sets", conflict_sets)
+    # experiment.candidate_graph = cand_graph
+    
+    # solver, soln_graph = run_motile(cand_graph, conflict_sets, solver_params)
+    # print(
+    #     f"soln graph has {soln_graph.number_of_nodes} nodes and {soln_graph.number_of_edges} edges"
+    # )
 
-    experiment.solution_graph = soln_graph
-    print(experiment.exp_base_dir)
+    # experiment.solution_graph = soln_graph
+    # print(experiment.exp_base_dir)

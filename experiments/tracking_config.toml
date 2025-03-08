@@ -1,4 +1,4 @@
-name = "reparameterization"
+name = "fixed_threshold_computation"
 
 [dataset]
 name = "post_twitching_neurons"

@@ -1,32 +1,17 @@
-import argparse
+from ..experiment import Experiment
 from pathlib import Path
 
 import napari
 from motile_tracker.application_menus import MainApp
 from motile_tracker.data_model import SolutionTracks
-from motile_tracker.data_views import TracksViewer
+from motile_tracker.data_views import TracksViewer, TreeWidget
 from motile_toolbox.candidate_graph import NodeAttr
-from c_elegans_utils.experiment import Experiment
 
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("exp_dir")
-    parser.add_argument("--time-range", nargs=2, type=int, default=None)
-    parser.add_argument("-c", "--cluster", action="store_true")
-    args = parser.parse_args()
-
-    mount_path = Path("/groups/funke") if args.cluster else Path("/Volumes/funke$")
-    base_path = mount_path / "malinmayorc/experiments/c_elegans_tracking"
-
-    exp_dir = base_path / args.exp_dir
-    exp = Experiment.from_dir(exp_dir, cluster=args.cluster)
-
+def view_experiment(exp: Experiment):
     viewer = napari.Viewer()
 
-    motile_widget = MainApp(viewer)
-    tracks_viewer = TracksViewer.get_instance(viewer)
+    tracks_viewer = TracksViewer(viewer)
+    motile_widget = TreeWidget(tracks_viewer)
     viewer.window.add_dock_widget(motile_widget)
 
     # solution tracks
@@ -72,4 +57,4 @@ if __name__ == "__main__":
     cand_layer.selected_data.events.items_changed.connect(add_detection_candidates)
     
     viewer.add_layer(cand_layer)
-    napari.run()
+    napari.run(max_loop_level=2)

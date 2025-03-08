@@ -10,7 +10,7 @@ import toml
 from c_elegans_utils.tracking import SolverParams
 
 from .dataset import Dataset
-from .utils import _test_exists
+from .utils import _test_exists, _get_mount
 
 
 def get_git_commit_id():
@@ -22,20 +22,22 @@ class Experiment:
     timestamp_format = "%y%m%d_%H%M%S"
     config_file = "config.toml"
     solution_graph_file = "solution_graph.json"
+    candidate_graph_file = "candidate_graph.json"
 
     def __init__(self, name, config: dict, cluster=False, new=True, timestamp=None):
         self.name = name
         self.config = config
         self.timestamp = timestamp
         self.cluster = cluster
-        self.mount_path = Path("/groups/funke") if cluster else Path("/Volumes/funke$")
+        self.mount_path = _get_mount("groups", cluster)
         if new:
             self._initialize_experiment()
         else:
             _test_exists(self.exp_base_dir)
-        self.dataset = Dataset(**self.config["dataset"], cluster=self.cluster)
         self.solver_params = SolverParams(**self.config["solver_params"])
+        self._dataset = None
         self._solution_graph = None
+        self._candidate_graph = None
 
     def _initialize_experiment(self):
         _test_exists(self.base_dir)
@@ -53,7 +55,6 @@ class Experiment:
         timestamp = datetime.strptime("_".join(components[0:2]), cls.timestamp_format)
         name = "_".join(components[2:])
 
-        print(stem, components, timestamp, name)
         config_file = dir / cls.config_file
         _test_exists(config_file)
         with open(config_file) as f:
@@ -93,6 +94,12 @@ class Experiment:
             json.dump(graph_data, f)
 
     @property
+    def dataset(self):
+        if self._dataset is None:
+            self._dataset = Dataset(**self.config["dataset"], cluster=self.cluster)
+        return self._dataset
+
+    @property
     def base_dir(self):
         return self.mount_path / "malinmayorc/experiments/c_elegans_tracking"
 
@@ -105,7 +112,7 @@ class Experiment:
         return self.timestamp.strftime(self.timestamp_format)
 
     @property
-    def solution_graph(self) -> nx.DiGraph:
+    def solution_graph(self) -> nx.DiGraph | None:
         if self._solution_graph is not None:
             return self._solution_graph
         path = self.exp_base_dir / self.solution_graph_file
@@ -115,6 +122,29 @@ class Experiment:
             return None
 
     @solution_graph.setter
-    def solution_graph(self, solution_graph: nx.DiGraph):
-        self._save_graph(self.exp_base_dir / self.solution_graph_file, solution_graph)
-        self._solution_graph = solution_graph
+    def solution_graph(self, graph: nx.DiGraph):
+        self._save_graph(self.exp_base_dir / self.solution_graph_file, graph)
+        self._solution_graph = graph
+
+    @property
+    def candidate_graph(self) -> nx.DiGraph:
+        if self._candidate_graph is not None:
+            return self._candidate_graph
+        path = self.exp_base_dir / self.candidate_graph_file
+        try:
+            return self._load_graph(path)
+        except AssertionError:
+            return None
+
+    @candidate_graph.setter
+    def candidate_graph(self, graph: nx.DiGraph):
+        self._save_graph(self.exp_base_dir / self.candidate_graph_file, graph)
+        self._candidate_graph = graph
+
+    def delete(self):
+        print(f"deleting {self.uid} {self.name}")
+        to_remove = [self.solution_graph_file, self.candidate_graph_file, self.config_file]
+        for name in to_remove:
+            print(f"removing {name}")
+            (self.exp_base_dir / name).unlink(missing_ok=True)
+        self.exp_base_dir.rmdir()

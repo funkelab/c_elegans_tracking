@@ -163,13 +163,12 @@ class WormSpace:
 
     def get_max_side_spline_distance(self):
         max_dist = 0
-        for ap in range(0, 10):
+        for ap in np.linspace(*self.valid_range, num=25):
             center_point = self.center_spline.interpolate([ap])[0]
             right_point = self.right_spline.interpolate([ap])[0]
             dist = np.linalg.norm(center_point - right_point)
             if dist > max_dist:
                 max_dist = dist
-
         return max_dist
 
     def reparameterize(self):
