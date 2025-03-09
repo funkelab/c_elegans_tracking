@@ -10,7 +10,7 @@ import toml
 from c_elegans_utils.tracking import SolverParams
 
 from .dataset import Dataset
-from .utils import _test_exists, _get_mount
+from .utils import _get_mount, _test_exists
 
 
 def get_git_commit_id():
@@ -143,7 +143,11 @@ class Experiment:
 
     def delete(self):
         print(f"deleting {self.uid} {self.name}")
-        to_remove = [self.solution_graph_file, self.candidate_graph_file, self.config_file]
+        to_remove = [
+            self.solution_graph_file,
+            self.candidate_graph_file,
+            self.config_file,
+        ]
         for name in to_remove:
             print(f"removing {name}")
             (self.exp_base_dir / name).unlink(missing_ok=True)

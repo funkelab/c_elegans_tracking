@@ -91,9 +91,7 @@ def convert_raw_straightened(
         range(*time_range), desc="Getting shapes of each straightened time point"
     ):
         file = (
-            raw_path
-            / DIR_TEMPLATE.format(time=i)
-            / STRAIGHT_FILE_TEMPLATE.format(time=i)
+            raw_path / DIR_TEMPLATE.format(time=i) / STRAIGHT_FILE_TEMPLATE.format(time=i)
         )
         assert file.is_file(), f"File {file} does not exist"
         tif = tifffile.TiffFile(file)
@@ -127,9 +125,7 @@ def convert_raw_straightened(
     offset = (time_range[0], 0, 0, 0)
     voxel_size = (1, 1, 1, 1)
     axis_names = ("t", "z", "y", "x")
-    dtype = (
-        np.uint16
-    )  # the tiffs are float 32. However, the floating points are not used
+    dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
 
     target_array = fp.prepare_ds(
@@ -152,9 +148,7 @@ def convert_raw_straightened(
         desc="Loading, padding, and saving each straightened time point",
     ):
         file = (
-            raw_path
-            / DIR_TEMPLATE.format(time=i)
-            / STRAIGHT_FILE_TEMPLATE.format(time=i)
+            raw_path / DIR_TEMPLATE.format(time=i) / STRAIGHT_FILE_TEMPLATE.format(time=i)
         )
         assert file.is_file(), f"File {file} does not exist"
         arr = tifffile.imread(file)
@@ -188,9 +182,7 @@ def convert_raw_twisted(
     offset = (time_range[0], 0, 0, 0)
     voxel_size = (1, 1, 1, 1)
     axis_names = ("t", "z", "y", "x")
-    dtype = (
-        np.uint16
-    )  # the tiffs are float 32. However, the floating points are not used
+    dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
     target_array = fp.prepare_ds(
         store=output_store,
@@ -207,9 +199,7 @@ def convert_raw_twisted(
     # zarr_array.attrs["pad_widths"] = pad_widths
 
     # load the actual data, pad, and write to zarr
-    for i in tqdm(
-        range(*time_range), desc="Loading and saving each twisted time point"
-    ):
+    for i in tqdm(range(*time_range), desc="Loading and saving each twisted time point"):
         file = raw_path / TWISTED_FILE_TEMPLATE.format(time=i)
         assert file.is_file(), f"File {file} does not exist"
         arr = tifffile.imread(file)

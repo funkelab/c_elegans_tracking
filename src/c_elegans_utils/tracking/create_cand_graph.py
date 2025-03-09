@@ -7,7 +7,9 @@ from ..worm_space import WormSpace
 
 
 def create_cand_graph(
-    detections: np.ndarray, lattice_points: np.ndarray, max_edge_distance: int,
+    detections: np.ndarray,
+    lattice_points: np.ndarray,
+    max_edge_distance: int,
 ) -> tuple[nx.DiGraph, list[list[int]]]:
     num_times = lattice_points.shape[0]
     locations_by_time = {time: [] for time in range(num_times)}
@@ -35,6 +37,7 @@ def create_cand_graph(
                     NodeAttr.POS.value: np.array(cand),
                     NodeAttr.TIME.value: time,
                     "detection_id": detection_id,
+                    "pixel_loc": location,
                 }
                 cand_graph.add_node(
                     node_id,

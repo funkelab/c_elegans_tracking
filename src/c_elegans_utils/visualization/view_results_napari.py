@@ -1,11 +1,10 @@
-from ..experiment import Experiment
-from pathlib import Path
-
 import napari
-from motile_tracker.application_menus import MainApp
+from motile_toolbox.candidate_graph import NodeAttr
 from motile_tracker.data_model import SolutionTracks
 from motile_tracker.data_views import TracksViewer, TreeWidget
-from motile_toolbox.candidate_graph import NodeAttr
+
+from ..experiment import Experiment
+
 
 def view_experiment(exp: Experiment):
     viewer = napari.Viewer()
@@ -20,7 +19,11 @@ def view_experiment(exp: Experiment):
 
     # candidate detections
     def get_location(graph, node):
-       return [graph.nodes[node][NodeAttr.TIME.value], *graph.nodes[node][NodeAttr.POS.value]]
+        return [
+            graph.nodes[node][NodeAttr.TIME.value],
+            *graph.nodes[node][NodeAttr.POS.value],
+        ]
+
     cand_graph = exp.candidate_graph
     node_ids = list(cand_graph.nodes())
     points = [get_location(cand_graph, node) for node in node_ids]
@@ -35,11 +38,14 @@ def view_experiment(exp: Experiment):
         if detection_id not in nodes_by_detection:
             nodes_by_detection[detection_id] = []
         nodes_by_detection[detection_id].append(node)
+
     def add_detection_candidates(data):
         selected_indices = set(cand_layer.selected_data)
         print(len(selected_indices), " selected nodes")
         selected_nodes = [node_ids[ix] for ix in selected_indices]
-        selected_detections = set([cand_layer.features["detection_id"][node] for node in selected_nodes])
+        selected_detections = {
+            cand_layer.features["detection_id"][node] for node in selected_nodes
+        }
         print(len(selected_detections), " selected detections")
         new_node_indices = []
         for det_id in selected_detections:
@@ -47,14 +53,18 @@ def view_experiment(exp: Experiment):
             print("detection ", det_id, "nodes", det_nodes)
             for node in det_nodes:
                 if node_id_to_points_layer_idx[node] not in selected_nodes:
-                    new_node_indices.append(node_id_to_points_layer_idx[node] )
+                    new_node_indices.append(node_id_to_points_layer_idx[node])
         new_node_indices = set(new_node_indices)
         if len(new_node_indices) > 0:
-            cand_layer.selected_data.events.items_changed.disconnect(add_detection_candidates)
+            cand_layer.selected_data.events.items_changed.disconnect(
+                add_detection_candidates
+            )
             cand_layer.selected_data.update(new_node_indices)
-            cand_layer.selected_data.events.items_changed.connect(add_detection_candidates)
-    
+            cand_layer.selected_data.events.items_changed.connect(
+                add_detection_candidates
+            )
+
     cand_layer.selected_data.events.items_changed.connect(add_detection_candidates)
-    
+
     viewer.add_layer(cand_layer)
     napari.run(max_loop_level=2)

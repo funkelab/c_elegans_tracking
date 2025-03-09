@@ -9,7 +9,6 @@ from motile_toolbox.candidate_graph import (
     NodeAttr,
     graph_to_nx,
 )
-from motile_toolbox.candidate_graph.graph_to_nx import graph_to_nx
 
 from .solver_params import SolverParams
 
@@ -61,6 +60,6 @@ def run_motile(
             name="distance",
         )
 
-    solver.solve(verbose=False, timeout=90)
+    solver.solve(verbose=True, timeout=120)
     soln_graph = graph_to_nx(solver.get_selected_subgraph())
     return solver, soln_graph

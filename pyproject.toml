@@ -52,6 +52,7 @@ pyqtgraph = ">=0.13.7,<0.14"
 [tool.pixi.pypi-dependencies]
 c-elegans-utils = { path = ".", editable = true }
 motile_tracker = { path = "../motile_tracker", editable = true }
+traccuracy = { path = "../traccuracy", editable = true }
 
 
 [tool.pixi.tasks]
@@ -62,6 +63,7 @@ view_straightened_remote = "python visualization/view_c_elegans.py visualization
 tracking_demo = "python visualization/tracking_demo.py visualization/straightened_local.toml"
 test = "pytest tests"
 experiment = "python experiments/run_tracking.py experiments/tracking_config.toml"
+exp_viewer = "python visualization/view_experiments.py"
 
 [tool.pixi.feature.dev.dependencies]
 ruff = "*"
@@ -95,4 +97,9 @@ ignore = [
   "S311",   # random numbers for cryptography
   "S101",   # asserts not allowed
   "E731",   # don't define lambdas
+  "B028",   # explicit stack level on warn
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/c_elegans_utils/tracking/solver_params.py"= ["E501"]
+"__init__.py" = ["F401"]

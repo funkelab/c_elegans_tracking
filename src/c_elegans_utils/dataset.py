@@ -32,12 +32,12 @@ class Dataset:
     lattice_points_dir = "lattice_points"
     seg_centers_file = "CellPoseCenters.csv"
 
-    choices = [
+    choices = (
         "post_twitching_neurons",
         "lin_26_0208_Pos4",
         "lin_26_0213_Pos3",
         "lin_26_0315_Pos4",
-    ]
+    )
 
     def __init__(self, name: str, cluster=False, time_range=None):
         if name not in self.choices:

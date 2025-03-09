@@ -162,7 +162,8 @@ def load_graph(annotations_path, path_after_time, time_range, offsets):
         offset = offsets[i - time_range[0]] if offsets is not None else [0, 0, 0]
         if straightened:
             file = annotations_path / DIR_TEMPLATE.format(time=i) / path_after_time
-            # file = annotations_path / DIR_TEMPLATE.format(time=i) / "straightened_annotations" / "straightened_annotations.csv"
+            # file = annotations_path / DIR_TEMPLATE.format(time=i) / 
+            # "straightened_annotations" / "straightened_annotations.csv"
         else:
             file = (
                 annotations_path
@@ -211,8 +212,6 @@ def load_straightened(time_range):
         f"Dir {manual_annotations_path} does not exist"
     )
     raw, offsets = load_raw(raw_path, time_range)
-    # seam_cell_raw, seam_cell_offsets = load_raw(seam_cell_raw_path, time_range)
-    # assert offsets == seam_cell_offsets, f"Offsets from RegB {offsets} and RegA {seam_cell_offsets} are not equal"
     manual_graph = load_graph(manual_annotations_path, time_range, offsets)
     carsen_points = load_points(carsen_annotations_path, time_range, offsets)
     return raw, manual_graph, carsen_points
@@ -239,25 +238,8 @@ if __name__ == "__main__":
     motile_widget = MainApp(viewer)
     viewer.window.add_dock_widget(motile_widget)
 
-    # load the seam cells to do registration
-    # seam_cell_path = base_path / "Seam_Cells" / dirname
-    # _test_exists(seam_cell_path)
-    # if straightened:
-    #     path_after_time = "straightened_seamcells/straightened_seamcells.csv"
-    # else:
-    #     path_after_time = "seam_cell_final/seam_cells.csv"
-    # seam_cells = load_graph(seam_cell_path, path_after_time, time_range, offsets=None)
-    # target_seam_cells = []
-    # target = "H1R"
-    # for node, data in seam_cells.nodes(data=True):
-    #     if data["name"] == target:
-    #         target_seam_cells.append([data["time"], *data["pos"]])
-    # target_seam_cells = np.array(sorted(target_seam_cells, key=lambda x: x[0]))[:, 1:]
-
     raw_path = base_path / "RegB" / dirname
     _test_exists(raw_path)
-    # raw_aligned, offsets = load_raw(raw_path, time_range, straightened=straightened, seam_cells=target_seam_cells)
-    # viewer.add_image(raw_aligned, name="RegB_aligned")
     raw, offsets = load_raw(raw_path, time_range, straightened=straightened)
     viewer.add_image(raw, name="RegB")
 
@@ -296,13 +278,19 @@ if __name__ == "__main__":
             seam_cell_raw_path,
             time_range,
             straightened=straightened,
-            seam_cells=target_seam_cells,
         )
         assert offsets == seam_cell_offsets, (
             f"Offsets from RegB {offsets} and RegA {seam_cell_offsets} are not equal"
         )
         viewer.add_image(seam_cell_raw, name="RegA")
 
+        seam_cell_path = base_path / "Seam_Cells" / dirname
+        _test_exists(seam_cell_path)
+        if straightened:
+            path_after_time = "straightened_seamcells/straightened_seamcells.csv"
+        else:
+            path_after_time = "seam_cell_final/seam_cells.csv"
+        seam_cells = load_graph(seam_cell_path, path_after_time, time_range, offsets=None)
         tracks_viewer.tracks_list.add_tracks(
             SolutionTracks(seam_cells, ndim=4), "seam_cells"
         )

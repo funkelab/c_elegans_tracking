@@ -51,9 +51,7 @@ if __name__ == "__main__":
     motile_widget = MainApp(viewer)
     tracks_viewer = TracksViewer.get_instance(viewer)
     viewer.window.add_dock_widget(motile_widget)
-    run = MotileRun.load(
-        "/Users/malinmayorc/experiments/c_elegans/12172024_101839_demo"
-    )
+    run = MotileRun.load("/Users/malinmayorc/experiments/c_elegans/12172024_101839_demo")
 
     if args.manual:
         manual_dir = zarr_file / config["manual_tracks_dir"]
@@ -72,9 +70,7 @@ if __name__ == "__main__":
             points_df = points_df[points_df["t"] >= time_range[0]]
             points_df = points_df[points_df["t"] < time_range[1]]
         points = points_df[["t", "z", "y", "x"]].to_numpy()
-        viewer.add_points(
-            data=points, name="cellpose_centers", size=5, face_color="pink"
-        )
+        viewer.add_points(data=points, name="cellpose_centers", size=5, face_color="pink")
 
     tracks_viewer.tracks_list.add_tracks(run, name=run.run_name)
 

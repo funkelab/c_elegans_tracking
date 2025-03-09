@@ -142,9 +142,9 @@ class WormSpace:
                 + normal_plane[2] * point[2]
                 + normal_plane[3]
             )
-            assert math.isclose(
-                point_val, 0, abs_tol=0.001
-            ), f"Point {point} does not intersect plane ({point_val})"
+            assert math.isclose(point_val, 0, abs_tol=0.001), (
+                f"Point {point} does not intersect plane ({point_val})"
+            )
 
         # make sure center point is on the plane
         center_point = self.center_spline.interpolate([ap])[0]

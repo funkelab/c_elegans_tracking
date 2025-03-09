@@ -1,28 +1,16 @@
-from warnings import warn
+from functools import partial
 
-import napari
-import napari.layers
-import numpy as np
-import pyqtgraph as pg
-from napari.layers import Points, Shapes
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QLabel,
+    QMainWindow,
     QPushButton,
-    QVBoxLayout,
     QTableWidget,
     QTableWidgetItem,
-    QMainWindow,
     QWidget,
-    QHBoxLayout,
 )
-from superqt import QDoubleSlider
-from pathlib import Path
-from ..dist_to_spline import dist_to_spline
-from ..worm_space import WormSpace
-from ..utils import _get_mount
+
 from ..experiment import Experiment
-from functools import partial
+from ..utils import _get_mount
 from .view_results_napari import view_experiment
 
 
@@ -34,22 +22,22 @@ class Experiments:
     @property
     def base_dir(self):
         return self.mount_path / "malinmayorc/experiments/c_elegans_tracking"
-    
+
     @property
     def list(self) -> list[Experiment]:
         exps = []
-        for dir in self.base_dir.iterdir():
+        for _dir in self.base_dir.iterdir():
             try:
-                exps.append(Experiment.from_dir(dir, cluster=self.cluster))
+                exps.append(Experiment.from_dir(_dir, cluster=self.cluster))
             except Exception as e:
-                print(f"dir {dir} likely doesn't contain an experiment, {e}")
+                print(f"dir {_dir} likely doesn't contain an experiment, {e}")
         return exps
-    
+
     def delete(self, uid: str):
         for experiment in self.list:
             if experiment.uid == uid:
                 experiment.delete()
-    
+
 
 class ExperimentsViewer(QMainWindow):
     def __init__(self, cluster=False):
@@ -92,7 +80,6 @@ class ExperimentsViewer(QMainWindow):
         widget.setColumnCount(len(columns))
         widget.setHorizontalHeaderLabels(columns)
 
-       
         return widget
 
     def delete_experiment(self, experiment: Experiment):

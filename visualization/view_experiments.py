@@ -1,6 +1,6 @@
-from qtpy.QtWidgets import QApplication, QWidget
-from c_elegans_utils.visualization.experiment_viewer import ExperimentsViewer
+from qtpy.QtWidgets import QApplication
 
+from c_elegans_utils.visualization.experiment_viewer import ExperimentsViewer
 
 # You need one (and only one) QApplication instance per application.
 app = QApplication([])

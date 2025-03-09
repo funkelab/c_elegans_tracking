@@ -23,11 +23,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = toml.load(args.config)
     if args.dataset is not None:
-        config["dataset"]["name"] == args.dataset
+        config["dataset"]["name"] = args.dataset
     if args.name is not None:
-        config["name"] == args.name
+        config["name"] = args.name
     if args.time_range is not None:
-        config["dataset"]["time_range"] == args.time_range
+        config["dataset"]["time_range"] = args.time_range
     # this makes an experiment directory with timestamp uuid and saves config
     name = config["name"]
     experiment = Experiment(name, config, cluster=args.cluster)
@@ -42,14 +42,15 @@ if __name__ == "__main__":
         max_edge_distance=solver_params.max_edge_distance,
     )
     print(
-        f"cand graph has {len(cand_graph.nodes)} nodes and {len(cand_graph.edges)} edges"
+        f"cand graph has {len(cand_graph.nodes)} nodes, {len(cand_graph.edges)} edges, "
+        f"and {len(conflict_sets)} conflict sets"
     )
-    print("conflict sets", conflict_sets)
     experiment.candidate_graph = cand_graph
 
     solver, soln_graph = run_motile(cand_graph, conflict_sets, solver_params)
     print(
-        f"soln graph has {soln_graph.number_of_nodes()} nodes and {soln_graph.number_of_edges()} edges"
+        f"soln graph has {soln_graph.number_of_nodes()} nodes and "
+        f"{soln_graph.number_of_edges()} edges"
     )
 
     experiment.solution_graph = soln_graph

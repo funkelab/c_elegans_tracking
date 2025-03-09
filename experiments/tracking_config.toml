@@ -6,7 +6,7 @@ time_range = [0,15]
 
 [solver_params]
 max_edge_distance = 60
-edge_selection_cost = -20000
-appear_cost = 100
-disappear_cost = 100
-distance_cost = 1
+edge_selection_cost = -200
+appear_cost = 50
+disappear_cost = 50
+distance_cost = 0.1
