@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     solver, soln_graph = run_motile(cand_graph, conflict_sets, solver_params)
     print(
-        f"soln graph has {soln_graph.number_of_nodes} nodes and {soln_graph.number_of_edges} edges"
+        f"soln graph has {soln_graph.number_of_nodes()} nodes and {soln_graph.number_of_edges()} edges"
     )
 
     experiment.solution_graph = soln_graph
