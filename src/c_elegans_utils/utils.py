@@ -10,7 +10,7 @@ def _get_mount(fileshare: str, cluster: bool) -> Path:
             False: Path("/Volumes/funke"),
         },
         "groups": {
-            True: Path("/nrs/groups"),
+            True: Path("/groups/funke/home"),
             False: Path("/Volumes/funke$"),
         },
     }
