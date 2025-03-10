@@ -6,30 +6,36 @@ from motile_toolbox.candidate_graph.utils import add_cand_edges
 from ..worm_space import WormSpace
 
 
+def get_threshold(worm_space: WormSpace):
+    max_dist = worm_space.get_max_side_spline_distance()
+    return max_dist * 1.25
+
+
 def create_cand_graph(
     detections: np.ndarray,
     lattice_points: np.ndarray,
     max_edge_distance: int,
 ) -> tuple[nx.DiGraph, list[list[int]]]:
     num_times = lattice_points.shape[0]
-    locations_by_time = {time: [] for time in range(num_times)}
+    locations_by_time: dict[int, list[np.ndarray]] = {
+        time: [] for time in range(num_times)
+    }
     for detection_id, detection in enumerate(detections):
         time = detection[0]
         locations_by_time[time].append((detection_id, detection[1:]))
 
     cand_graph = nx.DiGraph()
     conflict_sets = []
-    node_frame_dict = {time: [] for time in range(num_times)}
+    node_frame_dict: dict[int, list[int]] = {time: [] for time in range(num_times)}
     node_id = 1
 
     for time, locations in locations_by_time.items():
         worm_space = WormSpace(lattice_points[time])
-        max_dist = worm_space.get_max_side_spline_distance()
-        print(f"max spline distance in time {time}: {max_dist}")
         for detection_id, location in locations:
+            threshold = get_threshold(worm_space)
             cand_list = worm_space.get_candidate_locations(
-                np.array([location]), threshold=max_dist * 1.5
-            )[0]
+                np.array(location), threshold=threshold
+            )
             # print("Candidate list", cand_list)
             conflicting = []
             for cand in cand_list:

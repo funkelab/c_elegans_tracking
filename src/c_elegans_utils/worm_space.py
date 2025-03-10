@@ -44,7 +44,7 @@ class WormSpace:
         self.reparameterize()
 
     def get_candidate_locations(
-        self, target_points: np.ndarray, threshold: float | None = None
+        self, target_point: np.ndarray, threshold: float | None = None
     ) -> list[tuple[float, float, float]]:
         """Get the possible worm space locations for a given point in input pixel space.
 
@@ -55,34 +55,29 @@ class WormSpace:
         # TODO: endpoints look bad, don't use this strategy past 0 and 10
 
         Args:
-            target_points(np.ndarray): The input space location of the points
+            target_point (np.ndarray): The input space location of the point
             threshold (float | None, optional): Exclude candidates further than
                 threshold from the worm center spline. Defaults to None, which will
                 return candidate locations at all local distance minima.
 
         Returns:
-            list[list[tuple[float, float, float]]]: All possible worm space coordiantes
+            list[tuple[float, float, float]]: All possible worm space coordiantes
             of the point, in order (AP, ML, DV)
         """
         ap_locs, distances, local_minima_indices = dist_to_spline(
-            target_points, self.center_spline, self.valid_range, threshold=threshold
+            target_point, self.center_spline, self.valid_range, threshold=threshold
         )
-        all_cand_locs = []
 
-        for target_point, mins in zip(target_points, local_minima_indices):
-            if len(mins) == 0:
-                warn(
-                    f"No candidate locations found for {target_point} "
-                    f"with threshold {threshold}.",
-                    stacklevel=2,
-                )
-                all_cand_locs.append([])
-            else:
-                cand_ap_locs = ap_locs[mins]
-                all_cand_locs.append(
-                    [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
-                )
-        return all_cand_locs
+        if len(local_minima_indices) == 0:
+            warn(
+                f"No candidate locations found for {target_point} "
+                f"with threshold {threshold}.",
+                stacklevel=2,
+            )
+            return []
+        else:
+            cand_ap_locs = ap_locs[local_minima_indices]
+            return [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
 
     def get_worm_coords(
         self,
@@ -110,7 +105,7 @@ class WormSpace:
                 (AP, ML, DV)
         """
         try:
-            self.sanity_check(target_point, ap)
+            self.sanity_check(ap)
         except AssertionError as e:
             print(e)
         center_point = self.center_spline.interpolate([ap])[0]
@@ -132,25 +127,10 @@ class WormSpace:
         dv_basis = dv_basis / np.linalg.norm(dv_basis)
         return ml_basis, dv_basis, tan_vec
 
-    def sanity_check(self, point, ap):
-        normal_plane = self.center_spline.get_normal_plane(ap)
-
-        def point_on_plane(point):
-            point_val = (
-                normal_plane[0] * point[0]
-                + normal_plane[1] * point[1]
-                + normal_plane[2] * point[2]
-                + normal_plane[3]
-            )
-            assert math.isclose(point_val, 0, abs_tol=0.001), (
-                f"Point {point} does not intersect plane ({point_val})"
-            )
-
-        # make sure center point is on the plane
+    def sanity_check(self, ap):
         center_point = self.center_spline.interpolate([ap])[0]
-        point_on_plane(center_point)
 
-        # Then make sure the three points form a line
+        # Make sure the three points form a line
         left_point = self.left_spline.interpolate([ap])[0]
         right_point = self.right_spline.interpolate([ap])[0]
         vec1 = left_point - center_point
