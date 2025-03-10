@@ -79,6 +79,34 @@ class WormSpace:
             cand_ap_locs = ap_locs[local_minima_indices]
             return [self.get_worm_coords(target_point, s) for s in cand_ap_locs]
 
+    def get_best_candidate(
+        self, target_point: np.ndarray
+    ) -> tuple[float, float, float] | None:
+        """Get the single best candidate for a target point. Currently chooses the
+        candidate with the minimum distance to the spline.
+
+        Args:
+            target_point (np.ndarray): The pixel location to be converted to worm space
+
+        Returns:
+            tuple[float, float, float] | None: The most likely worm space coordinates
+                for the given pixel location, based on nearness to the center spline
+        """
+        ap_locs, distances, local_minima_indices = dist_to_spline(
+            target_point, self.center_spline, self.valid_range, threshold=None
+        )
+        if len(local_minima_indices) == 0:
+            warn(
+                f"No candidate locations found for {target_point}.",
+                stacklevel=2,
+            )
+            return None
+        min_distances: list = list(distances[local_minima_indices])
+        min_dist = min(min_distances)
+        min_idx = local_minima_indices[min_distances.index(min_dist)]
+        ap = ap_locs[min_idx]
+        return self.get_worm_coords(target_point, ap)
+
     def get_worm_coords(
         self,
         target_point: tuple[float, float, float],
