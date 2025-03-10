@@ -32,9 +32,10 @@ dependencies = [
 [tool.pixi.project]
 channels = ["conda-forge", "funkelab", "gurobi"]
 platforms = ["osx-arm64", "linux-64"]
+conda-pypi-map = {"funkelab" = "local_mapping.json"}
 
 [tool.pixi.dependencies]
-ilpy = ">=0.4.1,<0.5"
+ilpy = {version=">=0.4.1,<0.5", channel="funkelab"}
 tifffile = ">=2024.12.12,<2025"
 pandas = ">=2.2.3,<3"
 # numpy = ">=2.2.0,<3"
@@ -56,9 +57,6 @@ traccuracy = { path = "../traccuracy", editable = true }
 
 
 [tool.pixi.tasks]
-view_twisted = "python visualization/view_c_elegans.py visualization/twisted_remote.toml --raw --manual --seg --center-spline --seam-cell-tracks"
-view_straightened = "python visualization/view_c_elegans.py visualization/straightened_local.toml --raw --manual --seg --seg-centers --seam-cell-tracks"
-view_straightened_remote = "python visualization/view_c_elegans.py visualization/straightened_remote.toml --raw --seg --manual --seam-cell-tracks"
 
 tracking_demo = "python visualization/tracking_demo.py visualization/straightened_local.toml"
 test = "pytest tests"
