@@ -3,8 +3,9 @@ import argparse
 import napari
 import napari.layers
 import numpy as np
-from motile_tracker.application_menus import MainApp
+from motile_tracker.application_menus import MenuWidget
 from motile_tracker.data_model import SolutionTracks, Tracks
+from motile_tracker.data_views.views.tree_view.tree_widget import TreeWidget
 from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 from napari.layers import Shapes
 
@@ -12,8 +13,8 @@ from c_elegans_utils.compute_central_spline import (
     CubicSpline3D,
 )
 from c_elegans_utils.experiment import Dataset
+from c_elegans_utils.visualization.candidate_node_widget import CandidateNodeWidget
 from c_elegans_utils.visualization.worm_space_widget import (
-    CandidateNodeWidget,
     WormSpaceWidget,
 )
 
@@ -87,21 +88,25 @@ if __name__ == "__main__":
     if args.seg or args.all:
         viewer.add_labels(data=ds.seg, name="CellPose", blending="translucent_no_depth")
 
+    tracks_viewer = None
     if args.manual or args.seam_cell_tracks or args.all:
-        motile_widget = MainApp(viewer)
-        tracks_viewer = TracksViewer.get_instance(viewer)
-        viewer.window.add_dock_widget(motile_widget)
+        tracks_viewer = TracksViewer(viewer)
+        tree_widget = TreeWidget(tracks_viewer)
+        menu_widget = MenuWidget(viewer)
+        viewer.window.add_dock_widget(tree_widget)
 
     if args.manual or args.all:
-        solution_tracks = SolutionTracks(graph=ds.manual_tracks)
+        solution_tracks = SolutionTracks(graph=ds.manual_tracks, ndim=4)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
 
     if args.seam_cell_tracks or args.all:
-        solution_tracks = SolutionTracks(graph=ds.seam_cell_tracks)
+        solution_tracks = SolutionTracks(graph=ds.seam_cell_tracks, ndim=4)
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
 
     if args.worm_space or args.all:
-        cand_loc_widget = CandidateNodeWidget(viewer, ds.lattice_points)
+        cand_loc_widget = CandidateNodeWidget(
+            viewer, ds.lattice_points, tracks_viewer=tracks_viewer
+        )
         viewer.window.add_dock_widget(cand_loc_widget)
         worm_space_widget = WormSpaceWidget(viewer, ds.lattice_points)
         viewer.window.add_dock_widget(worm_space_widget)
