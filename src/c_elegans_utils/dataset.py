@@ -82,7 +82,7 @@ class Dataset:
 
         graph = nx.node_link_graph(json_graph, directed=True)
         if self.time_range is not None:
-            graph = _crop_tracks(graph)
+            graph = _crop_tracks(graph, self.time_range)
         return graph
 
     def _load_csv(self, csv_file: Path) -> np.ndarray:
@@ -108,11 +108,13 @@ class Dataset:
 
     @property
     def manual_tracks(self) -> nx.DiGraph:
-        return self._load_graph(self.manual_tracks_dir / "graph.json")
+        return self._load_graph(self._zarr_file / self.manual_tracks_dir / "graph.json")
 
     @property
     def seam_cell_tracks(self) -> nx.DiGraph:
-        return self._load_graph(self.seam_cell_tracks_dir / "graph.json")
+        return self._load_graph(
+            self._zarr_file / self.seam_cell_tracks_dir / "graph.json"
+        )
 
     @property
     def lattice_points(self) -> np.ndarray:
