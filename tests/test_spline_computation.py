@@ -1,3 +1,4 @@
+import math
 import os
 from pathlib import Path
 
@@ -45,7 +46,7 @@ def test_cubic_spline_3d():
     )
 
 
-def test_normal_plane():
+def test_tan_vec():
     indices = np.arange(0, 11)
     locations = np.zeros(shape=(11, 3))
     for i in range(11):
@@ -53,11 +54,10 @@ def test_normal_plane():
     spline = CubicSpline3D(indices, locations)
 
     for i in range(11):
-        a, b, c, d = spline.get_normal_plane(i)
-        assert a == 1
-        assert b == 0
-        assert c == 0
-        assert d == -1 * i
+        a, b, c = spline.get_tan_vec(i)
+        assert math.isclose(a, 1)
+        assert math.isclose(b, 0)
+        assert math.isclose(c, 0)
 
 
 def test_get_center_spline():

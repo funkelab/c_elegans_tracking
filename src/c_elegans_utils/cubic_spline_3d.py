@@ -39,33 +39,12 @@ class CubicSpline3D:
         """
         return np.stack([spline(indices) for spline in self.splines], axis=1)
 
-    def get_normal_plane(self, s: float) -> tuple[float, float, float, float]:
-        """Get the four coordinates that define the plane normal to the curve at s.
-        Ax + By + Cz + D = 0
-        Args:
-            s (float): The locaiton along the curve to get the plane normal to
-
-        Returns:
-            tuple[float, float, float, float]: (A, B, C, D) in the above equation. A is
-                normalized to 1 (unless it is zero, then there is no normalization)
-        """
-        # get the center point
-        center = [spline(s) for spline in self.splines]
-        derivatives = self.get_tan_vec(s)
-        # find D by setting dot product to 0
-        d = -1 * sum([der * cen for der, cen in zip(derivatives, center)])
-        derivatives.append(d)
-
-        a = derivatives[0]
-        plane_params = tuple(d / a for d in derivatives) if a != 0 else tuple(derivatives)
-        return plane_params
-
     def get_tan_vec(self, s: float) -> list[float]:
         # get derivative (gives you A, B, C)
         derivatives = []
         for spline in self.splines:
             der = spline.derivative()
-            derivatives.append(der(s))
+            derivatives.append(float(der(s)))
         return derivatives
 
     def get_dist_along_spline(self, start, end, num_samples=20) -> float:
