@@ -4,9 +4,9 @@ from typing import Iterable
 import ilpy
 import networkx as nx
 import numpy as np
-from motile_toolbox.candidate_graph import NodeAttr
 
 from ..dataset import Dataset
+from ..graph_attrs import NodeAttr
 from ..worm_space import WormSpace
 
 
@@ -70,7 +70,9 @@ def get_optimal_cand_locations(
 
 
 def convert_gt_track_to_worm_space(
-    gt_graph: nx.DiGraph, nodes: Iterable[int], dataset: Dataset
+    gt_graph: nx.DiGraph,
+    nodes: Iterable[int],
+    dataset: Dataset,
 ):
     """Find the optimal worm space coordinates for a given connected track by minimizing
     the pairwise distance in worm space. Worm coordinates will be saved in the "worm_pos"
@@ -85,8 +87,8 @@ def convert_gt_track_to_worm_space(
     """
     node_id_to_cands: dict[int, list] = {}
     for node in nodes:
-        time = gt_graph.nodes[node][NodeAttr.TIME.value]
-        pixel_loc = gt_graph.nodes[node][NodeAttr.POS.value]
+        time = gt_graph.nodes[node][NodeAttr.time]
+        pixel_loc = gt_graph.nodes[node][NodeAttr.pixel_loc]
         worm_space = WormSpace(dataset.lattice_points[time])
         candidate_locs = worm_space.get_candidate_locations(pixel_loc)
         if len(candidate_locs) > 0:
@@ -94,13 +96,21 @@ def convert_gt_track_to_worm_space(
 
     if len(node_id_to_cands) == 0:
         return
+
+    solution: dict[int, tuple]
     if len(node_id_to_cands) == 1:
         node = next(iter(node_id_to_cands.keys()))
-        time = gt_graph.nodes[node][NodeAttr.TIME.value]
-        pixel_loc = gt_graph.nodes[node][NodeAttr.POS.value]
+        time = gt_graph.nodes[node][NodeAttr.time]
+        pixel_loc = gt_graph.nodes[node][NodeAttr.pixel_loc]
         worm_space = WormSpace(dataset.lattice_points[time])
-        solution: dict[int, tuple] = {node: worm_space.get_best_candidate(pixel_loc)}
+        best_loc = worm_space.get_best_candidate(pixel_loc)
+        if best_loc is None:
+            raise ValueError(
+                "Expected gt node to have a candidate location, but found None"
+            )
+        else:
+            solution = {node: best_loc}
     else:
         solution = get_optimal_cand_locations(node_id_to_cands)
 
-    nx.set_node_attributes(gt_graph, values=solution, name="worm_pos")
+    nx.set_node_attributes(gt_graph, values=solution, name=NodeAttr.worm_space_loc)
