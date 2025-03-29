@@ -3,6 +3,8 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/c_elegans_utils"]
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [project]
 name = "c-elegans-utils"
@@ -23,7 +25,8 @@ dependencies = [
   "motile>=0.3.0,<0.4",
   "funlib-persistence>=0.5.3,<0.6",
   "motile-toolbox",
-  "matplotlib",
+  "matplotlib", 
+  "motile-tracker @ git+https://github.com/funkelab/motile_tracker.git@traccuracy_visualization",
 ]
 
 # TODO: Get back dynamic versions
@@ -38,7 +41,7 @@ conda-pypi-map = {"funkelab" = "local_mapping.json"}
 ilpy = {version=">=0.4.1,<0.5", channel="funkelab"}
 tifffile = ">=2024.12.12,<2025"
 pandas = ">=2.2.3,<3"
-# numpy = ">=2.2.0,<3"
+numpy = "<3"
 tqdm = ">=4.67.1,<5"
 networkx = ">=3.4.2,<4"
 zarr = ">=2.18.4,<3"
@@ -52,9 +55,7 @@ pyqtgraph = ">=0.13.7,<0.14"
 
 [tool.pixi.pypi-dependencies]
 c-elegans-utils = { path = ".", editable = true }
-motile_tracker = { path = "../motile_tracker", editable = true }
 traccuracy = { path = "../traccuracy", editable = true }
-
 
 [tool.pixi.tasks]
 
