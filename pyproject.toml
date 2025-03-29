@@ -66,6 +66,7 @@ exp_viewer = "python visualization/view_experiments.py"
 
 [tool.pixi.feature.dev.dependencies]
 ruff = "*"
+types-toml = "*"
 
 [tool.pixi.feature.dev.tasks]
 format = "ruff format ."
