@@ -85,6 +85,29 @@ class Dataset:
             graph = _crop_tracks(graph, self.time_range)
         return graph
 
+    def _save_graph(self, json_file: Path, graph: nx.DiGraph):
+        graph_data = nx.node_link_data(graph)
+
+        def convert_np_types(data):
+            """Recursively convert numpy types to native Python types."""
+
+            if isinstance(data, dict):
+                return {key: convert_np_types(value) for key, value in data.items()}
+            elif isinstance(data, list):
+                return [convert_np_types(item) for item in data]
+            elif isinstance(data, np.ndarray):
+                return data.tolist()  # Convert numpy arrays to Python lists
+            elif isinstance(data, np.integer):
+                return int(data)  # Convert numpy integers to Python int
+            elif isinstance(data, np.floating):
+                return float(data)  # Convert numpy floats to Python float
+            else:
+                return data  # Return the data as-is if it's already a native Python type
+
+        graph_data = convert_np_types(graph_data)
+        with open(json_file, "w") as f:
+            json.dump(graph_data, f)
+
     def _load_csv(self, csv_file: Path) -> np.ndarray:
         _test_exists(csv_file)
         points_df = pd.read_csv(csv_file)
@@ -93,6 +116,11 @@ class Dataset:
             points_df = points_df[points_df["t"] < self.time_range[1]]
             points_df["t"] = points_df["t"] - self.time_range[0]
         return points_df[["t", "z", "y", "x"]].to_numpy()
+
+    def _save_csv(self, csv_file: Path, array: np.ndarray, columns=("t", "z", "y", "x")):
+        assert len(columns) == array.shape[0]
+        df = pd.DataFrame(array, columns=columns)
+        df.to_csv(csv_file, index=False)
 
     @property
     def raw(self) -> np.ndarray:
@@ -110,10 +138,20 @@ class Dataset:
     def manual_tracks(self) -> nx.DiGraph:
         return self._load_graph(self._zarr_file / self.manual_tracks_dir / "graph.json")
 
+    @manual_tracks.setter
+    def manual_tracks(self, graph: nx.DiGraph):
+        self._save_graph(self._zarr_file / self.manual_tracks_dir / "graph.json", graph)
+
     @property
     def seam_cell_tracks(self) -> nx.DiGraph:
         return self._load_graph(
             self._zarr_file / self.seam_cell_tracks_dir / "graph.json"
+        )
+
+    @seam_cell_tracks.setter
+    def seam_cell_tracks(self, graph: nx.DiGraph):
+        self._save_graph(
+            self._zarr_file / self.seam_cell_tracks_dir / "graph.json", graph
         )
 
     @property
