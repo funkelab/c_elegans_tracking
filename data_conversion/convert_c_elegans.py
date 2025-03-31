@@ -20,36 +20,19 @@ STRAIGHT_FILE_TEMPLATE = "Decon_reg_{time}_straight.tif"
 SEG_FILE_TEMPLATE = "Decon_reg_{time}_masks.tif"
 TWISTED_FILE_TEMPLATE = "Decon_reg_{time}.tif"
 
-# def pad_to_seam_cell(arr_shapes: list[Coordinate], seam_cell_locs: np.ndarray)-> list[tuple[Coordinate, Coordinate]]:
-#     ndim = arr_shapes[0].dims
-#     # find max seam cell location to move everything to
-#     max_loc = Coordinate(max(seam_cell_locs[:, dim]) for dim in range(ndim))
-#     print(f"{max_loc=}")
-#     # find offset needed for each frame to move seam cell to that location
-#     offsets = [max_loc - Coordinate(seam_cell_loc) for seam_cell_loc in seam_cell_locs]
-#     print(f"{offsets=}")
-#     max_shape = np.max(np.array([shape + offset for shape, offset in zip(arr_shapes, offsets, strict=True)]), axis=1)
-#     print(f"{max_shape=}")
-#     pad_widths = []
-#     for shape, offset in zip(arr_shapes, offsets, strict=True):
-#         upper_pad_amt = max_shape - shape - offset
-#         pad_width = (offset, upper_pad_amt)
-#         print(f"{pad_width=}")
-#         pad_widths.append(pad_width)
-#     return pad_widths
-
 
 # a left and right padding for each of the three dimensions (z, y, x)
 def get_center_pad_widths(
     arr_shapes: list[Coordinate], target_shape: Coordinate
 ) -> list[tuple[Coordinate, Coordinate]]:
-    """Gets the pad widths necessary to center each array in arrs in a new array of the given shape
+    """Gets the pad widths necessary to center each array in arrs in a new array of the
+    given shape
 
     Args:
-        arrs (list[tuple]): A list of current array shapes to pad to the given shape by placing
-            them in the center.
-        shape (tuple): The desired shape of each numpy array. Should be >= the shape of each
-            array (no cropping implemented)
+        arrs (list[tuple]): A list of current array shapes to pad to the given shape by
+            placing them in the center.
+        shape (tuple): The desired shape of each numpy array. Should be >= the shape of
+            each array (no cropping implemented)
     Returns:
         list[PadWidth]: A list of pad widths to be used in np.pad, each corresponding
         to one array in arrs. Each pad width is a tuple of three elements,
@@ -69,7 +52,8 @@ def _get_store_padding(store) -> tuple[Coordinate, list[tuple[Coordinate, Coordi
         store (_type_): _description_
 
     Returns:
-        tuple[Coordinate, list[tuple[Coordinate, Coordinate]]]: The shape of one frame, and the pad amounts for each frame
+        tuple[Coordinate, list[tuple[Coordinate, Coordinate]]]: The shape of one frame,
+            and the pad amounts for each frame
     """
     _test_exists(store)
     store = zarr.open(store, "r")
@@ -103,9 +87,9 @@ def convert_raw_straightened(
     output_frame_shape: Coordinate
     pad_widths: list[tuple[Coordinate, Coordinate]]
     if alignment == "match_store":
-        assert store_to_match is not None, (
-            "Must provide store to match size and pad_widths"
-        )
+        assert (
+            store_to_match is not None
+        ), "Must provide store to match size and pad_widths"
         output_frame_shape, pad_widths = _get_store_padding(store_to_match)
     elif alignment == "center":
         # determine the maximum extent in each dimension
@@ -182,7 +166,8 @@ def convert_raw_twisted(
     offset = (time_range[0], 0, 0, 0)
     voxel_size = (1, 1, 1, 1)
     axis_names = ("t", "z", "y", "x")
-    dtype = np.uint16  # the tiffs are float 32. However, the floating points are not used
+    dtype = np.uint16
+    # the tiffs are float 32. However, the floating points are not used
     # and the max value is 63430. So we will save as uint16 to be efficient
     target_array = fp.prepare_ds(
         store=output_store,
@@ -232,8 +217,8 @@ def convert_tracks(
         _test_exists(file)
         try:
             df = pd.read_csv(file)
-        except pandas.errors.EmptyDataError:
-            raise ValueError(f"{file} cannot be read by pandas - might be empty")
+        except pandas.errors.EmptyDataError as e:
+            raise ValueError(f"{file} cannot be read by pandas - might be empty") from e
         df["time"] = i - time_range[0]
         z_offset = offset[0]
         y_offset = offset[1]
@@ -245,7 +230,7 @@ def convert_tracks(
             name = row["name"]
             attrs = {
                 "time": row["time"],
-                "pos": [row["z_voxels"], row["y_voxels"], row["x_voxels"]],
+                "pixel_loc": [row["z_voxels"], row["y_voxels"], row["x_voxels"]],
                 "name": row["name"],
             }
             graph.add_node(node_id, **attrs)
