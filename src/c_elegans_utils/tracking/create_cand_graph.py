@@ -2,6 +2,7 @@ from typing import Any, Iterable
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
@@ -15,27 +16,24 @@ def get_threshold(worm_space: WormSpace):
 
 
 def create_cand_graph(
-    detections: np.ndarray,
+    detections: pd.DataFrame,
     lattice_points: np.ndarray,
     max_edge_distance: int,
 ) -> tuple[nx.DiGraph, list[list[int]]]:
     num_times = lattice_points.shape[0]
-    locations_by_time: dict[int, list[np.ndarray]] = {
-        time: [] for time in range(num_times)
-    }
-    for detection_id, detection in enumerate(detections):
-        time = detection[0]
-        locations_by_time[time].append((detection_id, detection[1:]))
 
     cand_graph = nx.DiGraph()
     conflict_sets = []
     node_frame_dict: dict[int, list[int]] = {time: [] for time in range(num_times)}
     node_id = 1
 
-    for time, locations in locations_by_time.items():
+    for time in detections[NodeAttr.time].unique():
+        filtered_df = detections[detections[NodeAttr.time] == time]
         worm_space = WormSpace(lattice_points[time])
-        for detection_id, location in locations:
+        for _, row in filtered_df.iterrows():
+            row_dict = row.to_dict()
             threshold = get_threshold(worm_space)
+            location = [row_dict["z"], row_dict["y"], row_dict["x"]]
             cand_list = worm_space.get_candidate_locations(
                 np.array(location), threshold=threshold
             )
@@ -45,8 +43,10 @@ def create_cand_graph(
                 attrs = {
                     NodeAttr.worm_space_loc: np.array(cand),
                     NodeAttr.time: time,
-                    NodeAttr.detection_id: detection_id,
+                    NodeAttr.detection_id: row_dict["label"],
                     NodeAttr.pixel_loc: location,
+                    NodeAttr.area: row_dict[NodeAttr.area],
+                    NodeAttr.mean_intensity: row_dict[NodeAttr.mean_intensity],
                 }
                 cand_graph.add_node(
                     node_id,

@@ -113,7 +113,10 @@ if __name__ == "__main__":
 
     if args.seg_centers or args.all:
         viewer.add_points(
-            data=ds.seg_centers, name="cellpose_centers", size=5, face_color="pink"
+            data=ds.seg_centers[["time", "z", "y", "x"]].to_numpy(),
+            name="cellpose_centers",
+            size=5,
+            face_color="pink",
         )
 
     napari.run()

@@ -33,8 +33,6 @@ if __name__ == "__main__":
     experiment = Experiment(name, config, cluster=args.cluster)
     ds = experiment.dataset
     solver_params = experiment.solver_params
-    seg_centers = ds.seg_centers
-    print(len(seg_centers))
 
     cand_graph, conflict_sets = create_cand_graph(
         ds.seg_centers,

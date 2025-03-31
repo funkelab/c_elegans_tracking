@@ -69,6 +69,13 @@ class Dataset:
             arr = fp_array[:]
         return arr
 
+    def _save_array(self, store: Path, arr: np.ndarray):
+        fp_array = fp.open_ds(store, mode="a")
+        if self.time_range:
+            fp_array[self.time_range[0] : self.time_range[1]] = arr
+        else:
+            fp_array[:] = arr
+
     def _load_lattice_points(self, store: Path) -> np.ndarray:
         _test_exists(store)
         zarray = zarr.open(store)
@@ -148,6 +155,10 @@ class Dataset:
     def seg(self) -> np.ndarray:
         return self._load_array(self._zarr_file / self.seg_group)
 
+    @seg.setter
+    def seg(self, arr: np.ndarray):
+        self._save_array(self._zarr_file / self.seg_group, arr)
+
     @property
     def manual_tracks(self) -> nx.DiGraph:
         return self._load_graph(self._zarr_file / self.manual_tracks_dir / "graph.json")
@@ -173,9 +184,9 @@ class Dataset:
         return self._load_lattice_points(self._zarr_file / self.lattice_points_dir)
 
     @property
-    def seg_centers(self) -> np.ndarray:
+    def seg_centers(self) -> pd.DataFrame:
         df = self._load_csv(self._zarr_file / self.seg_centers_file)
-        return df[[NodeAttr.time, "z", "y", "x"]].to_numpy()
+        return df
 
     def compute_seg_centers(self):
         df = nodes_from_segmentation(self.seg, self.raw, scale=self.voxel_size)

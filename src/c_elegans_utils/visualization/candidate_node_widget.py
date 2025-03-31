@@ -60,11 +60,11 @@ class CandidateNodeWidget(QWidget):
                     stacklevel=2,
                 )
                 return
-            selected_points = active_layer.selected_data
+            selected_points = list(active_layer.selected_data)
             data = active_layer.data[selected_points]
         if len(selected_points) != 1:
             warn(
-                "Please select one point before computing spline " "distances",
+                "Please select one point before computing spline distances",
                 stacklevel=2,
             )
             return
