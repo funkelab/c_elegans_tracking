@@ -8,9 +8,8 @@ def test_extract_detections():
     shape = (10, 10, 10, 10)
     seg = np.zeros(shape=shape, dtype=np.uint16)
     intensity = np.random.random_sample(size=shape)
-    df, node_frame_dict = nodes_from_segmentation(seg, intensity)
+    df = nodes_from_segmentation(seg, intensity)
     assert df.size == 0
-    assert len(node_frame_dict) == 0
 
     columns = [
         NodeAttr.time,
@@ -25,7 +24,7 @@ def test_extract_detections():
         assert column in df.columns
 
     seg[0, 0:10, 0:10, 0:10] = 1
-    df, node_frame_dict = nodes_from_segmentation(seg, intensity)
+    df = nodes_from_segmentation(seg, intensity)
     for column in columns:
         assert column in df.columns
 

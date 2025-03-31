@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 import zarr
 
+from c_elegans_utils.tracking import nodes_from_segmentation
+
+from .graph_attrs import NodeAttr
 from .utils import _test_exists
 
 
@@ -110,21 +113,32 @@ class Dataset:
 
     def _load_csv(self, csv_file: Path) -> np.ndarray:
         _test_exists(csv_file)
-        points_df = pd.read_csv(csv_file)
-        if self.time_range is not None:
-            points_df = points_df[points_df["t"] >= self.time_range[0]]
-            points_df = points_df[points_df["t"] < self.time_range[1]]
-            points_df["t"] = points_df["t"] - self.time_range[0]
-        return points_df[["t", "z", "y", "x"]].to_numpy()
+        df = pd.read_csv(csv_file)
+        if self.time_range is not None and NodeAttr.time in df.columns:
+            df = df[df[NodeAttr.time] >= self.time_range[0]]
+            df = df[df[NodeAttr.time] < self.time_range[1]]
+            df[NodeAttr.time] = df[NodeAttr.time] - self.time_range[0]
+        return df
 
-    def _save_csv(self, csv_file: Path, array: np.ndarray, columns=("t", "z", "y", "x")):
-        assert len(columns) == array.shape[0]
-        df = pd.DataFrame(array, columns=columns)
+    def _save_csv(self, csv_file: Path, df: pd.DataFrame):
         df.to_csv(csv_file, index=False)
 
     @property
     def raw(self) -> np.ndarray:
         return self._load_array(self._zarr_file / self.raw_group)
+
+    @property
+    def voxel_size(self) -> tuple[float, float, float]:
+        # only include the spatial dimensions (z, y, x)
+        store = self._zarr_file / self.raw_group
+        _test_exists(store)
+        fp_array = fp.open_ds(store)
+        vs = fp_array.voxel_size
+        if len(vs) == 4:
+            vs = vs[1:]
+        assert len(vs) == 3
+        print("voxel size", vs)
+        return tuple(vs)
 
     @property
     def seam_cell_raw(self) -> np.ndarray:
@@ -160,4 +174,9 @@ class Dataset:
 
     @property
     def seg_centers(self) -> np.ndarray:
-        return self._load_csv(self._zarr_file / self.seg_centers_file)
+        df = self._load_csv(self._zarr_file / self.seg_centers_file)
+        return df[[NodeAttr.time, "z", "y", "x"]].to_numpy()
+
+    def compute_seg_centers(self):
+        df = nodes_from_segmentation(self.seg, self.raw, scale=self.voxel_size)
+        self._save_csv(self._zarr_file / self.seg_centers_file, df)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -11,9 +10,6 @@ from tqdm import tqdm
 
 from ..graph_attrs import NodeAttr
 
-if TYPE_CHECKING:
-    from typing import Any
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +17,7 @@ def nodes_from_segmentation(
     segmentation: np.ndarray,
     intensity: np.ndarray,
     scale: list[float] | None = None,
-) -> tuple[pd.DataFrame, dict[int, list[int]]]:
+) -> pd.DataFrame:
     """Extract candidate nodes from a segmentation. Returns a data frame
     with only nodes, and also a dictionary from frames to node_ids for
     efficient edge adding.
@@ -45,21 +41,16 @@ def nodes_from_segmentation(
             Defaults to None, which implies the data is isotropic.
 
     Returns:
-        pd.DataFrame, dict[int, list[int]]: A data frame with nodes and relevant
-            attributes, and a mapping from time frames to node ids.
+        pd.DataFrame: A data frame with nodes and relevant attributes
     """
     logger.debug("Extracting nodes from segmentation")
-    # also construct a dictionary from time frame to node_id for efficiency
-    node_frame_dict: dict[int, list[Any]] = {}
 
     if scale is None:
-        scale = [
-            1,
-        ] * segmentation.ndim
+        scale = [1] * (segmentation.ndim - 1)
     else:
         assert (
-            len(scale) == segmentation.ndim
-        ), f"Scale {scale} should have {segmentation.ndim} dims"
+            len(scale) == segmentation.ndim - 1
+        ), f"Scale {scale} should have {segmentation.ndim - 1} dims"
 
     node_dict = defaultdict(list)
 
@@ -68,7 +59,7 @@ def nodes_from_segmentation(
         props = regionprops_table(
             segs,
             intensity_image=intensity[t],
-            spacing=tuple(scale[1:]),
+            spacing=tuple(scale),
             properties=("area", "intensity_mean", "label", "centroid"),
         )
         num_nodes = len(props["label"])
@@ -76,9 +67,6 @@ def nodes_from_segmentation(
             node_dict[column].extend(values)
         if num_nodes > 0:
             node_dict[NodeAttr.time].extend([t] * num_nodes)
-            if t not in node_frame_dict:
-                node_frame_dict[t] = []
-            node_frame_dict[t].extend(props["label"])
 
     if len(node_dict["label"]) == 0:
         empty_df = pd.DataFrame(
@@ -92,7 +80,7 @@ def nodes_from_segmentation(
                 "label",
             ]
         )
-        return empty_df, {}
+        return empty_df
 
     # print(node_dict)
     df = pd.DataFrame(node_dict)
@@ -103,4 +91,4 @@ def nodes_from_segmentation(
             "centroid-2": "x",
         }
     )
-    return df, node_frame_dict
+    return df
