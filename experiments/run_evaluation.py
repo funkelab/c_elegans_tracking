@@ -7,7 +7,6 @@ from c_elegans_utils.tracking.evaluate import evaluate
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("exp_dir")
-    parser.add_argument("--time-range", nargs=2, type=int, default=None)
     parser.add_argument("-c", "--cluster", action="store_true")
     args = parser.parse_args()
 
@@ -16,4 +15,6 @@ if __name__ == "__main__":
 
     exp_dir = base_path / args.exp_dir
     exp = Experiment.from_dir(exp_dir, cluster=args.cluster)
-    evaluate(exp)
+    results = evaluate(exp)
+    if results is not None:
+        exp.results = results

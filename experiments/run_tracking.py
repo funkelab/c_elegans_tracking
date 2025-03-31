@@ -3,7 +3,7 @@ import argparse
 import toml
 
 from c_elegans_utils.experiment import Experiment
-from c_elegans_utils.tracking import create_cand_graph, run_motile
+from c_elegans_utils.tracking import create_cand_graph, evaluate, run_motile
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -52,4 +52,8 @@ if __name__ == "__main__":
     )
 
     experiment.solution_graph = soln_graph
+    results = evaluate(experiment)
+    if results is not None:
+        experiment.results = results
+    print(results)
     print(experiment.exp_base_dir)

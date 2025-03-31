@@ -14,7 +14,7 @@ from .utils import _get_mount, _test_exists
 
 
 def get_git_commit_id():
-    git_hash = os.popen("git rev-parse HEAD").read().strip()
+    git_hash = os.popen("git rev-parse HEAD").read().strip()  # noqa S605 S607
     return git_hash
 
 
@@ -23,6 +23,7 @@ class Experiment:
     config_file = "config.toml"
     solution_graph_file = "solution_graph.json"
     candidate_graph_file = "candidate_graph.json"
+    results_file = "results.json"
 
     def __init__(self, name, config: dict, cluster=False, new=True, timestamp=None):
         self.name = name
@@ -125,6 +126,22 @@ class Experiment:
     def solution_graph(self, graph: nx.DiGraph):
         self._save_graph(self.exp_base_dir / self.solution_graph_file, graph)
         self._solution_graph = graph
+
+    @property
+    def results(self) -> dict | None:
+        json_file = self.exp_base_dir / self.results_file
+        if json_file.is_file():
+            with open(json_file) as f:
+                results = json.load(f)
+            return results
+        else:
+            return None
+
+    @results.setter
+    def results(self, result_dict: dict):
+        json_file = self.exp_base_dir / self.results_file
+        with open(json_file, "w") as f:
+            json.dump(result_dict, f)
 
     @property
     def candidate_graph(self) -> nx.DiGraph:

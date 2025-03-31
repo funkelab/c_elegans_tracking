@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from warnings import warn
 
 from traccuracy import TrackingGraph
 from traccuracy.matchers import PointMatcher
 from traccuracy.metrics import BasicMetrics, TrackOverlapMetrics
 
-from ..experiment import Experiment
 from ..graph_attrs import NodeAttr
+
+if TYPE_CHECKING:
+    from ..experiment import Experiment
 
 
 def convert_pos(graph, pos_key=NodeAttr.pixel_loc, location_keys=("z", "y", "x")):
@@ -16,10 +21,10 @@ def convert_pos(graph, pos_key=NodeAttr.pixel_loc, location_keys=("z", "y", "x")
             graph.nodes[node][location_keys[dim]] = pixel_loc[dim]
 
 
-def evaluate(exp: Experiment):
+def evaluate(exp: Experiment, threshold=80) -> dict | None:
     if exp.solution_graph is None:
         warn(f"Experiment {exp.uid} {exp.name} has no solution. Skipping evaluation.")
-        return
+        return None
     soln_graph = exp.solution_graph
     convert_pos(soln_graph, pos_key="pixel_loc")
     pred_graph = TrackingGraph(
@@ -32,9 +37,7 @@ def evaluate(exp: Experiment):
         manual_graph, frame_key=NodeAttr.time, location_keys=("z", "y", "x")
     )
 
-    matcher = PointMatcher(
-        threshold=20
-    )  # TODO: determine threshold based on something other than a guess
+    matcher = PointMatcher(threshold=threshold)
     matched = matcher.compute_mapping(gt_graph, pred_graph)
 
     basic_metrics = BasicMetrics()
@@ -43,5 +46,4 @@ def evaluate(exp: Experiment):
     overlap_metric = TrackOverlapMetrics(include_division_edges=True)
     overlap_results = overlap_metric.compute(matched)
     results = {"basic": basic_results.to_dict(), "overlap": overlap_results.to_dict()}
-    print(results)
-    # exp.results = results  # TODO: add results to experiment
+    return results
