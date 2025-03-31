@@ -56,8 +56,10 @@ class ExperimentsViewer(QMainWindow):
             self.list_widget.setItem(row, 0, uid)
             name = QTableWidgetItem(exp.name)
             self.list_widget.setItem(row, 1, name)
+            dataset = QTableWidgetItem(exp.dataset.name)
+            self.list_widget.setItem(row, 2, dataset)
             time_range = QTableWidgetItem(f"{exp.dataset.time_range}")
-            self.list_widget.setItem(row, 2, time_range)
+            self.list_widget.setItem(row, 3, time_range)
             if exp.solution_graph is None:
                 summary = "No solution"
             else:
@@ -65,18 +67,30 @@ class ExperimentsViewer(QMainWindow):
                     f"{exp.solution_graph.number_of_nodes()} nodes, "
                     f"{exp.solution_graph.number_of_nodes()} edges"
                 )
-            self.list_widget.setItem(row, 3, QTableWidgetItem(summary))
+            self.list_widget.setItem(row, 4, QTableWidgetItem(summary))
             delete_button = QPushButton("delete")
             delete_button.clicked.connect(partial(self.delete_experiment, exp))
-            self.list_widget.setCellWidget(row, 4, delete_button)
-            view_button = QPushButton("view")
+            self.list_widget.setCellWidget(row, 5, delete_button)
+            view_button = QPushButton("view twisted")
+            view_button.clicked.connect(partial(view_experiment, exp, True))
+            self.list_widget.setCellWidget(row, 6, view_button)
+            view_button = QPushButton("view straightened")
             view_button.clicked.connect(partial(view_experiment, exp))
-            self.list_widget.setCellWidget(row, 5, view_button)
+            self.list_widget.setCellWidget(row, 7, view_button)
         self.list_widget.resizeColumnsToContents()
 
     def _list_experiments_widget(self) -> QWidget:
         widget = QTableWidget()
-        columns = ["timestamp", "name", "time range", "summary", "delete", "view"]
+        columns = [
+            "timestamp",
+            "name",
+            "dataset",
+            "time range",
+            "summary",
+            "delete",
+            "view twisted",
+            "view straightened",
+        ]
         widget.setColumnCount(len(columns))
         widget.setHorizontalHeaderLabels(columns)
 
