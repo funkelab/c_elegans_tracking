@@ -3,4 +3,5 @@ class NodeAttr:
     worm_space_loc = "worm_loc"
     time = "time"
     detection_id = "detection_id"
-    mean_intensity = "mean_intensity"
+    mean_intensity = "intensity_mean"
+    area = "area"
