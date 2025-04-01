@@ -38,6 +38,7 @@ if __name__ == "__main__":
         ds.seg_centers,
         ds.lattice_points,
         max_edge_distance=solver_params.max_edge_distance,
+        area_threshold=solver_params.area_threshold,
     )
     print(
         f"cand graph has {len(cand_graph.nodes)} nodes, {len(cand_graph.edges)} edges, "

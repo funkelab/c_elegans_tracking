@@ -19,6 +19,7 @@ def create_cand_graph(
     detections: pd.DataFrame,
     lattice_points: np.ndarray,
     max_edge_distance: int,
+    area_threshold: int | None = None,
 ) -> tuple[nx.DiGraph, list[list[int]]]:
     num_times = lattice_points.shape[0]
 
@@ -40,21 +41,23 @@ def create_cand_graph(
             # print("Candidate list", cand_list)
             conflicting = []
             for cand in cand_list:
-                attrs = {
-                    NodeAttr.worm_space_loc: np.array(cand),
-                    NodeAttr.time: time,
-                    NodeAttr.detection_id: row_dict["label"],
-                    NodeAttr.pixel_loc: location,
-                    NodeAttr.area: row_dict[NodeAttr.area],
-                    NodeAttr.mean_intensity: row_dict[NodeAttr.mean_intensity],
-                }
-                cand_graph.add_node(
-                    node_id,
-                    **attrs,
-                )
-                conflicting.append(node_id)
-                node_frame_dict[time].append(node_id)
-                node_id += 1
+                area = row_dict[NodeAttr.area]
+                if area_threshold is None or area >= area_threshold:
+                    attrs = {
+                        NodeAttr.worm_space_loc: np.array(cand),
+                        NodeAttr.time: time,
+                        NodeAttr.detection_id: row_dict["label"],
+                        NodeAttr.pixel_loc: location,
+                        NodeAttr.area: area,
+                        NodeAttr.mean_intensity: row_dict[NodeAttr.mean_intensity],
+                    }
+                    cand_graph.add_node(
+                        node_id,
+                        **attrs,
+                    )
+                    conflicting.append(node_id)
+                    node_frame_dict[time].append(node_id)
+                    node_id += 1
             if len(conflicting) > 1:
                 conflict_sets.append(conflicting)
     add_cand_edges(

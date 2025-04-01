@@ -14,6 +14,11 @@ class SolverParams(BaseModel):
         description=r"""The maximum distance an object center can move between time frames.
 Objects further than this cannot be matched, but making this value larger will increase solving time.""",
     )
+    area_threshold: float | None = Field(
+        500.0,
+        title="Volume Threshold",
+        description=r"""Cells with volume smaller than this value will be excluded from the optimization and results.""",
+    )
     edge_selection_cost: float | None = Field(
         -20.0,
         title="Edge Selection",

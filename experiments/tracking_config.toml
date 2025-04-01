@@ -1,11 +1,12 @@
-name = "fixed_threshold_computation"
+name = "full_dataset"
 
 [dataset]
-name = "post_twitching_neurons"
-time_range = [0,15]
+name = "lin_26_0208_Pos4"
+# time_range = [0,15]
 
 [solver_params]
 max_edge_distance = 60
+area_threshold = 500.0
 edge_selection_cost = -200
 appear_cost = 50
 disappear_cost = 50
