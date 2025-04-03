@@ -34,14 +34,19 @@ class WormSpace:
         left = lattice_points[:, 1]
         center = (right + left) / 2
 
-        self.valid_range = (0, lattice_points.shape[0])
+        self.internal_range = (0, lattice_points.shape[0])
 
-        indices = list(range(*self.valid_range))
+        indices = list(range(*self.internal_range))
 
         self.right_spline = CubicSpline3D(indices, right)
         self.left_spline = CubicSpline3D(indices, left)
         self.center_spline = CubicSpline3D(indices, center)
         self.reparameterize()
+        buffer_amt = 0.05 * self.internal_range[1] - self.internal_range[0]
+        self.valid_range = (
+            self.internal_range[0] - buffer_amt,
+            self.internal_range[1] + buffer_amt,
+        )
 
     def get_candidate_locations(
         self, target_point: np.ndarray, threshold: float | None = None
@@ -51,8 +56,6 @@ class WormSpace:
         First computes the distance to the center spline along the length of the worm.
         Then finds local minima where distance is above threshold. (Warns if none exist).
         For each local minima, computes the worm space coordiantes of the point.
-
-        # TODO: endpoints look bad, don't use this strategy past 0 and 10
 
         Args:
             target_point (np.ndarray): The input space location of the point
@@ -136,6 +139,7 @@ class WormSpace:
             self.sanity_check(ap)
         except AssertionError as e:
             print(e)
+
         center_point = self.center_spline.interpolate([ap])[0]
         ml_basis, dv_basis, tan_vec = self.get_basis_vectors(ap)
         # get the vector from the center point to the target point
@@ -146,6 +150,12 @@ class WormSpace:
         return ap, ml, dv
 
     def get_basis_vectors(self, ap: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        # If we are extrapolating beyond the seam cells,
+        # get the basis vectors at the internal range end
+        if ap < self.internal_range[0]:
+            ap = self.internal_range[0]
+        elif ap > self.internal_range[1]:
+            ap = self.internal_range[1]
         right_point: np.ndarray = self.right_spline.interpolate([ap])[0]
         center_point: np.ndarray = self.center_spline.interpolate([ap])[0]
         tan_vec = self.center_spline.get_tan_vec(ap)
@@ -171,7 +181,7 @@ class WormSpace:
 
     def get_max_side_spline_distance(self):
         max_dist = 0
-        for ap in np.linspace(*self.valid_range, num=25):
+        for ap in np.linspace(*self.internal_range, num=25):
             center_point = self.center_spline.interpolate([ap])[0]
             right_point = self.right_spline.interpolate([ap])[0]
             dist = np.linalg.norm(center_point - right_point)
@@ -194,4 +204,4 @@ class WormSpace:
         self.right_spline = CubicSpline3D(indices, right)
         self.left_spline = CubicSpline3D(indices, left)
         self.center_spline = CubicSpline3D(indices, center)
-        self.valid_range = (0, position)
+        self.internal_range = (0, position)

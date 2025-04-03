@@ -53,15 +53,21 @@ class WormSpaceWidget(QWidget):
         self.viewer.add_layer(self.splines_layer)
         for time in range(self.lattice_points.shape[0]):
             worm_space = WormSpace(self.lattice_points[time])
-            splines = [
-                worm_space.center_spline,
-                worm_space.left_spline,
-                worm_space.right_spline,
+            num_steps = 120
+            spline_points = [
+                worm_space.center_spline.interpolate(
+                    np.linspace(*worm_space.valid_range, num_steps)
+                ),
+                worm_space.left_spline.interpolate(
+                    np.linspace(*worm_space.internal_range, num_steps)
+                ),
+                worm_space.right_spline.interpolate(
+                    np.linspace(*worm_space.internal_range, num_steps)
+                ),
             ]
             colors = ["white", "blue", "red"]
             paths = []
-            for spline in splines:
-                points = spline.interpolate(np.linspace(*worm_space.valid_range, 120))
+            for points in spline_points:
                 times = np.ones(shape=(points.shape[0], 1)) * time
                 points = np.hstack((times, points))
                 paths.append(points)
@@ -77,13 +83,6 @@ class WormSpaceWidget(QWidget):
 
     def display_basis_vectors(self, worm_space: WormSpace, ap, time):
         center_loc = worm_space.center_spline.interpolate([ap])[0]
-        right_spline_loc = worm_space.right_spline.interpolate([ap])[0]
-        left_spline_loc = worm_space.left_spline.interpolate([ap])[0]
-        points = np.array([center_loc, left_spline_loc, right_spline_loc])
-
-        times = np.ones(shape=(points.shape[0], 1)) * time
-        points = np.hstack((times, points))
-
         ml_basis, dv_basis, tan_vec = worm_space.get_basis_vectors(ap)
         ml_basis = ml_basis * 100
         dv_basis = dv_basis * 100
@@ -92,7 +91,16 @@ class WormSpaceWidget(QWidget):
         yaxis = np.array([[time, *center_loc], [time, *(center_loc + dv_basis)]])
         zaxis = np.array([[time, *center_loc], [time, *(center_loc + tan_vec)]])
 
-        self.intersection_points.data = []
-        self.intersection_points.add(points)
         self.axes.data = []
         self.axes.add_lines([xaxis, yaxis, zaxis], edge_color=["red", "purple", "green"])
+
+    def display_intersection_points(self, worm_space: WormSpace, ap, time):
+        center_loc = worm_space.center_spline.interpolate([ap])[0]
+        right_spline_loc = worm_space.right_spline.interpolate([ap])[0]
+        left_spline_loc = worm_space.left_spline.interpolate([ap])[0]
+        points = np.array([center_loc, left_spline_loc, right_spline_loc])
+
+        times = np.ones(shape=(points.shape[0], 1)) * time
+        points = np.hstack((times, points))
+        self.intersection_points.data = []
+        self.intersection_points.add(points)

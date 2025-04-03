@@ -9,13 +9,13 @@ from motile_tracker.data_views.views.tree_view.tree_widget import TreeWidget
 from motile_tracker.data_views.views_coordinator.tracks_viewer import TracksViewer
 from napari.layers import Shapes
 
-from c_elegans_utils.compute_central_spline import (
-    CubicSpline3D,
-)
-from c_elegans_utils.experiment import Dataset
+from c_elegans_utils import Dataset, NodeAttr
 from c_elegans_utils.visualization.candidate_node_widget import CandidateNodeWidget
 from c_elegans_utils.visualization.worm_space_widget import (
     WormSpaceWidget,
+)
+from c_elegans_utils.worm_space.compute_central_spline import (
+    CubicSpline3D,
 )
 
 
@@ -62,7 +62,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("--time-range", nargs=2, type=int, default=None)
     parser.add_argument("-c", "--cluster", action="store_true")
-    parser.add_argument("-s", "--straightened", action="store_true")
 
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--raw", action="store_true")
@@ -96,11 +95,15 @@ if __name__ == "__main__":
         viewer.window.add_dock_widget(tree_widget)
 
     if args.manual or args.all:
-        solution_tracks = SolutionTracks(graph=ds.manual_tracks, ndim=4)
+        solution_tracks = SolutionTracks(
+            graph=ds.manual_tracks, ndim=4, pos_attr=NodeAttr.pixel_loc
+        )
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "manual_annotations")
 
     if args.seam_cell_tracks or args.all:
-        solution_tracks = SolutionTracks(graph=ds.seam_cell_tracks, ndim=4)
+        solution_tracks = SolutionTracks(
+            graph=ds.seam_cell_tracks, ndim=4, pos_attr=NodeAttr.pixel_loc
+        )
         tracks_viewer.tracks_list.add_tracks(solution_tracks, "seam_cell_tracks")
 
     if args.worm_space or args.all:

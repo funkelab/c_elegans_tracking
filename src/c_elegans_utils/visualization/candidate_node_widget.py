@@ -45,7 +45,11 @@ class CandidateNodeWidget(QWidget):
         self.setLayout(layout)
 
     def compute_spline_distances(self):
-        if self.tracks_viewer is not None:
+        if (
+            self.tracks_viewer is not None
+            and self.viewer.layers.selection.active
+            == self.tracks_viewer.tracking_layers.points_layer
+        ):
             selected_points = self.tracks_viewer.selected_nodes._list
             data = self.tracks_viewer.tracks.get_positions(
                 selected_points, incl_time=True

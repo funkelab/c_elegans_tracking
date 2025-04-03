@@ -6,6 +6,9 @@ from scipy.interpolate import CubicSpline
 
 class CubicSpline3D:
     """A helper class for combining three splines, one for each dimension x y and z.
+    Also adds an explicit boundary polynomial so that the spline is extended linearly,
+    rather than just having zero first and second derivatives at the endpoint as
+    the bc_type "natural" implies.
 
     Args:
         s (Iterable[float]): The cell "locations" along the main worm axis. Defined by
@@ -14,17 +17,44 @@ class CubicSpline3D:
         locations (np.ndarray): an array with shape (n, 3), where n is usually 11,
             representing the 3D locations of the points along the parameterization
             of the spline
-        bc_type (str, optional): boundary condition passed to
-            scipy.interpolation.CubicSpline. Defaults to "natural".
     """
 
-    def __init__(
-        self, s: Iterable[float], locations: np.ndarray, bc_type: str = "natural"
-    ):
+    def __init__(self, s: Iterable[float], locations: np.ndarray):
         self.splines: Iterable[CubicSpline] = [
-            CubicSpline(s, locations[:, dim], bc_type=bc_type)
+            CubicSpline(s, locations[:, dim], bc_type="natural")
             for dim in range(locations.shape[1])
         ]
+        for spline in self.splines:
+            self.add_boundary_knots(spline)
+
+    def add_boundary_knots(self, spline: CubicSpline):
+        """
+        Add knots infinitesimally to the left and right.
+
+        Additional intervals are added to have zero 2nd and 3rd derivatives,
+        and to maintain the first derivative from whatever boundary condition
+        was selected. The spline is modified in place.
+        """
+        # determine the slope at the left edge
+        leftx = spline.x[0]
+        lefty = spline(leftx)
+        leftslope = spline(leftx, nu=1)
+
+        # add a new breakpoint just to the left and use the
+        # known slope to construct the PPoly coefficients.
+        leftxnext = np.nextafter(leftx, leftx - 1)
+        leftynext = lefty + leftslope * (leftxnext - leftx)
+        leftcoeffs = np.array([0, 0, leftslope, leftynext])
+        spline.extend(leftcoeffs[..., None], np.r_[leftxnext])
+
+        # repeat with additional knots to the right
+        rightx = spline.x[-1]
+        righty = spline(rightx)
+        rightslope = spline(rightx, nu=1)
+        rightxnext = np.nextafter(rightx, rightx + 1)
+        rightynext = righty + rightslope * (rightxnext - rightx)
+        rightcoeffs = np.array([0, 0, rightslope, rightynext])
+        spline.extend(rightcoeffs[..., None], np.r_[rightxnext])
 
     def interpolate(self, indices: np.ndarray):
         """Find the point at a given index along the paramaterization of the spline
