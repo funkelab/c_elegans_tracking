@@ -11,9 +11,8 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ..dist_to_spline import dist_to_spline
-from ..tracking.create_cand_graph import get_threshold
-from ..worm_space import WormSpace
+from c_elegans_utils.tracking.create_cand_graph import get_threshold
+from c_elegans_utils.worm_space import WormSpace, dist_to_spline
 
 
 class CandidateNodeWidget(QWidget):

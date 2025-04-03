@@ -4,8 +4,8 @@ from motile_tracker.data_model import SolutionTracks
 from motile_tracker.data_views import TracksViewer, TreeWidget
 from napari.layers import Image, Points
 
-from ..experiment import Experiment
-from ..graph_attrs import NodeAttr
+from c_elegans_utils import Experiment, NodeAttr
+
 from .convert_gt_track_to_worm_space import convert_gt_track_to_worm_space
 
 

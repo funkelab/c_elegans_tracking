@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
 )
 from superqt import QDoubleSlider
 
-from ..worm_space import WormSpace
+from ..worm_space.worm_space import WormSpace
 
 
 class WormSpaceWidget(QWidget):

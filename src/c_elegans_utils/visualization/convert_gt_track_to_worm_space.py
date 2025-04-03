@@ -5,9 +5,8 @@ import ilpy
 import networkx as nx
 import numpy as np
 
-from ..dataset import Dataset
-from ..graph_attrs import NodeAttr
-from ..worm_space import WormSpace
+from c_elegans_utils import Dataset, NodeAttr
+from c_elegans_utils.worm_space.worm_space import WormSpace
 
 
 def get_optimal_cand_locations(

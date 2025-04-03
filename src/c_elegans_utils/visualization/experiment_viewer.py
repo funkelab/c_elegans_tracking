@@ -14,8 +14,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ..experiment import Experiment
-from ..utils import _get_mount
+from c_elegans_utils import Experiment
+from c_elegans_utils.utils import _get_mount
+
 from .view_results_napari import view_experiment
 
 
