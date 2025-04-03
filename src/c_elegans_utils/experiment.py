@@ -164,6 +164,7 @@ class Experiment:
             self.solution_graph_file,
             self.candidate_graph_file,
             self.config_file,
+            self.results_file,
         ]
         for name in to_remove:
             print(f"removing {name}")
