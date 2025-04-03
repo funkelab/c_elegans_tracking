@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from c_elegans_utils.compute_central_spline import (
+from c_elegans_utils.worm_space.compute_central_spline import (
     CubicSpline3D,
     compute_central_spline_csv,
 )

@@ -1,11 +1,11 @@
 import networkx as nx
-from motile_toolbox.candidate_graph import NodeAttr
 
 from c_elegans_utils.dataset import Dataset
+from c_elegans_utils.graph_attrs import NodeAttr
 from c_elegans_utils.visualization.convert_gt_track_to_worm_space import (
     convert_gt_track_to_worm_space,
 )
-from c_elegans_utils.worm_space import WormSpace
+from c_elegans_utils.worm_space.worm_space import WormSpace
 
 
 def test_convert_gt_track_to_worm_space():
@@ -14,11 +14,11 @@ def test_convert_gt_track_to_worm_space():
     for track in nx.weakly_connected_components(gt_graph):
         convert_gt_track_to_worm_space(gt_graph, track, dataset)
         for node in track:
-            time = gt_graph.nodes[node][NodeAttr.TIME.value]
-            pixel_loc = gt_graph.nodes[node][NodeAttr.POS.value]
+            time = gt_graph.nodes[node][NodeAttr.time]
+            pixel_loc = gt_graph.nodes[node][NodeAttr.pixel_loc]
             worm_space = WormSpace(dataset.lattice_points[time])
             candidate_locs = worm_space.get_candidate_locations(pixel_loc)
             if len(candidate_locs) > 0:
                 assert (
-                    "worm_pos" in gt_graph.nodes[node]
+                    NodeAttr.worm_space_loc in gt_graph.nodes[node]
                 ), f"node {node} has no worm position selected"
