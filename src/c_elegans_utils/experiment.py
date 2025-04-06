@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 import toml
 
-from c_elegans_utils.tracking import SolverParams
+from c_elegans_utils.tracking import CandGraphParams, SolverParams
 
 from .dataset import Dataset
 from .utils import _get_mount, _test_exists
@@ -35,6 +35,7 @@ class Experiment:
             self._initialize_experiment()
         else:
             _test_exists(self.exp_base_dir)
+        self.cand_graph_params = CandGraphParams(**self.config["cand_graph_params"])
         self.solver_params = SolverParams(**self.config["solver_params"])
         self._dataset = None
         self._solution_graph = None

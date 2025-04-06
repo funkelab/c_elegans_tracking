@@ -33,13 +33,9 @@ if __name__ == "__main__":
     experiment = Experiment(name, config, cluster=args.cluster)
     ds = experiment.dataset
     solver_params = experiment.solver_params
+    cand_graph_params = experiment.cand_graph_params
 
-    cand_graph, conflict_sets = create_cand_graph(
-        ds.seg_centers,
-        ds.lattice_points,
-        max_edge_distance=solver_params.max_edge_distance,
-        area_threshold=solver_params.area_threshold,
-    )
+    cand_graph, conflict_sets = create_cand_graph(cand_graph_params, ds)
     print(
         f"cand graph has {len(cand_graph.nodes)} nodes, {len(cand_graph.edges)} edges, "
         f"and {len(conflict_sets)} conflict sets"

@@ -6,8 +6,10 @@ import pandas as pd
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
+from ..dataset import Dataset
 from ..graph_attrs import NodeAttr
 from ..worm_space import WormSpace
+from .cand_graph_params import CandGraphParams
 
 
 def get_threshold(worm_space: WormSpace):
@@ -15,18 +17,45 @@ def get_threshold(worm_space: WormSpace):
     return max_dist * 1.25
 
 
+def nx_to_df(graph: nx.DiGraph) -> pd.DataFrame:
+    nodes: dict[str, list] = {
+        NodeAttr.time: [],
+        "z": [],
+        "y": [],
+        "x": [],
+        NodeAttr.detection_id: [],
+    }
+    for node in graph.nodes():
+        time = graph.nodes[node][NodeAttr.time]
+        (
+            z,
+            y,
+            x,
+        ) = graph.nodes[node][NodeAttr.pixel_loc]
+        detection_id = node
+        nodes[NodeAttr.time].append(time)
+        nodes["z"].append(z)
+        nodes["y"].append(y)
+        nodes["x"].append(x)
+        nodes["label"].append(detection_id)
+    return pd.DataFrame(nodes)
+
+
 def create_cand_graph(
-    detections: pd.DataFrame,
-    lattice_points: np.ndarray,
-    max_edge_distance: int,
-    area_threshold: int | None = None,
+    params: CandGraphParams,
+    dataset: Dataset,
 ) -> tuple[nx.DiGraph, list[list[int]]]:
+    lattice_points = dataset.lattice_points
     num_times = lattice_points.shape[0]
 
     cand_graph = nx.DiGraph()
     conflict_sets = []
     node_frame_dict: dict[int, list[int]] = {time: [] for time in range(num_times)}
     node_id = 1
+    if params.use_gt:
+        detections = nx_to_df(dataset.manual_tracks)
+    else:
+        detections = dataset.seg_centers
 
     for time in detections[NodeAttr.time].unique():
         filtered_df = detections[detections[NodeAttr.time] == time]
@@ -41,16 +70,20 @@ def create_cand_graph(
             # print("Candidate list", cand_list)
             conflicting = []
             for cand in cand_list:
-                area = row_dict[NodeAttr.area]
-                if area_threshold is None or area >= area_threshold:
-                    attrs = {
-                        NodeAttr.worm_space_loc: np.array(cand),
-                        NodeAttr.time: time,
-                        NodeAttr.detection_id: row_dict["label"],
-                        NodeAttr.pixel_loc: location,
-                        NodeAttr.area: area,
-                        NodeAttr.mean_intensity: row_dict[NodeAttr.mean_intensity],
-                    }
+                attrs = {
+                    NodeAttr.worm_space_loc: np.array(cand),
+                    NodeAttr.time: time,
+                    NodeAttr.detection_id: row_dict["label"],
+                    NodeAttr.pixel_loc: location,
+                }
+                if not params.use_gt:
+                    attrs[NodeAttr.area] = row_dict[NodeAttr.area]
+                    attrs[NodeAttr.mean_intensity] = row_dict[NodeAttr.mean_intensity]
+                if (
+                    params.use_gt
+                    or params.area_threshold is None
+                    or attrs[NodeAttr.area] >= params.area_threshold
+                ):
                     cand_graph.add_node(
                         node_id,
                         **attrs,
@@ -61,7 +94,9 @@ def create_cand_graph(
             if len(conflicting) > 1:
                 conflict_sets.append(conflicting)
     add_cand_edges(
-        cand_graph, max_edge_distance=max_edge_distance, node_frame_dict=node_frame_dict
+        cand_graph,
+        max_edge_distance=params.max_edge_distance,
+        node_frame_dict=node_frame_dict,
     )
     return cand_graph, conflict_sets
 

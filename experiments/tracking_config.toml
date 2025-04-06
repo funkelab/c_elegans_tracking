@@ -2,11 +2,14 @@ name = "full_dataset"
 
 [dataset]
 name = "lin_26_0208_Pos4"
-# time_range = [0,15]
+time_range = [0,15]
+
+[cand_graph]
+max_edge_distance = 60
+area_threshold = 800.0
+use_gt = true
 
 [solver_params]
-max_edge_distance = 60
-area_threshold = 500.0
 edge_selection_cost = -200
 appear_cost = 50
 disappear_cost = 50
