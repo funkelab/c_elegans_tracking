@@ -7,8 +7,6 @@ import numpy as np
 import pandas as pd
 import zarr
 
-from c_elegans_utils.tracking import nodes_from_segmentation
-
 from .graph_attrs import NodeAttr
 from .utils import _test_exists
 
@@ -188,6 +186,6 @@ class Dataset:
         df = self._load_csv(self._zarr_file / self.seg_centers_file)
         return df
 
-    def compute_seg_centers(self):
-        df = nodes_from_segmentation(self.seg, self.raw, scale=self.voxel_size)
+    @seg_centers.setter
+    def seg_centers(self, df: pd.DataFrame):
         self._save_csv(self._zarr_file / self.seg_centers_file, df)

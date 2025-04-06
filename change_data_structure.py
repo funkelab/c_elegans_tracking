@@ -7,6 +7,7 @@ from motile_toolbox.utils.relabel_segmentation import ensure_unique_labels
 
 from c_elegans_utils.dataset import Dataset
 from c_elegans_utils.graph_attrs import NodeAttr
+from c_elegans_utils.tracking import nodes_from_segmentation
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -40,7 +41,7 @@ if __name__ == "__main__":
         ds.manual_tracks = relabel_pos(ds.manual_tracks)
         ds.seam_cell_tracks = relabel_pos(ds.seam_cell_tracks)
     elif args.function == "compute_seg_centers":
-        ds.compute_seg_centers()
+        ds.seg_centers = nodes_from_segmentation(ds.seg, ds.raw, scale=ds.voxel_size)
     elif args.function == "relabel_seg":
         ds.seg = ensure_unique_labels(ds.seg)
-        ds.compute_seg_centers()
+        ds.seg_centers = nodes_from_segmentation(ds.seg, ds.raw, scale=ds.voxel_size)

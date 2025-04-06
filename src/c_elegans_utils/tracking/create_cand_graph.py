@@ -23,7 +23,7 @@ def nx_to_df(graph: nx.DiGraph) -> pd.DataFrame:
         "z": [],
         "y": [],
         "x": [],
-        NodeAttr.detection_id: [],
+        "label": [],
     }
     for node in graph.nodes():
         time = graph.nodes[node][NodeAttr.time]

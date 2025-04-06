@@ -9,7 +9,7 @@ max_edge_distance = 60
 area_threshold = 800.0
 use_gt = true
 
-[solver_params]
+[solver]
 edge_selection_cost = -200
 appear_cost = 50
 disappear_cost = 50

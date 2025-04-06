@@ -35,8 +35,18 @@ class Experiment:
             self._initialize_experiment()
         else:
             _test_exists(self.exp_base_dir)
-        self.cand_graph_params = CandGraphParams(**self.config["cand_graph_params"])
-        self.solver_params = SolverParams(**self.config["solver_params"])
+        # handle legacy config files
+        if "cand_graph" not in self.config:
+            params = self.config["solver_params"]
+            self.cand_graph_params = CandGraphParams(
+                max_edge_distance=params.pop("max_edge_distance"),
+                area_threshold=params.pop("area_threshold", None),
+                use_gt=False,
+            )
+            self.solver_params = SolverParams(**params)
+        else:
+            self.cand_graph_params = CandGraphParams(**self.config["cand_graph"])
+            self.solver_params = SolverParams(**self.config["solver"])
         self._dataset = None
         self._solution_graph = None
         self._candidate_graph = None
